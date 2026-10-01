@@ -106,7 +106,7 @@ export const JAR_SCALE = 2 // jar model, label and effects are built at 1x and s
 // Effect Stall and the Daily Size Boost Stall. Built at 1x and scaled.
 // Master switch: false hides the chest (not drawn, no E zone, no collision). Keep == the backend's
 // CHEST_ENABLED (constants.ts), which refuses `openChest` while it is off.
-export const CHEST_ENABLED = true
+export const CHEST_ENABLED = false
 export const CHEST = { x: 1.2, z: 11.5 }
 export const CHEST_SCALE = 3
 
