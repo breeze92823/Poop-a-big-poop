@@ -20,16 +20,45 @@ function load() {
   } catch {
     /* no saved foods, or storage unavailable */
   }
+  try {
+    localStorage.removeItem(KEY) // expired or malformed: remove it
+  } catch {
+    /* storage blocked */
+  }
   return { slots: [], expiresAt: 0 }
 }
 
 let data = load() // { slots: [{ id, count }], expiresAt }
 restoreFoods(data.slots)
 
+// Removes the save the moment its 24 h are up (also while the game stays open); the emit
+// lets net.js save the cleared state, which removes it from the server too.
+let expiryTimer = null
+function scheduleExpiry() {
+  clearTimeout(expiryTimer)
+  expiryTimer = null
+  const left = data.expiresAt - Date.now()
+  if (left <= 0) return
+  expiryTimer = setTimeout(expire, Math.min(left, 2 ** 31 - 1) + 50)
+}
+
+function expire() {
+  if (data.expiresAt > Date.now()) return scheduleExpiry() // timeout was capped
+  data = { slots: [], expiresAt: 0 }
+  try {
+    localStorage.removeItem(KEY)
+  } catch {
+    /* storage blocked */
+  }
+  emit()
+}
+
 let open = false
 let timer = null
 let snapshot = null
 const listeners = new Set()
+
+scheduleExpiry()
 
 function persist() {
   try {
@@ -92,6 +121,7 @@ export function saveFoods() {
   if (!spendMoney(SAVE_COST)) return showActionResult('Not enough money', false)
   data = { slots: slots.map((s) => ({ ...s })), expiresAt: Date.now() + SAVE_MS }
   persist()
+  scheduleExpiry()
   showActionResult('Food effects saved', true)
   emit()
 }
@@ -106,8 +136,12 @@ export function getSavedFoods() {
 export function hydrateSavedFoods(d) {
   if (data.expiresAt > Date.now()) return
   if (!d || !Array.isArray(d.slots) || !Number.isFinite(d.expiresAt) || d.expiresAt <= Date.now()) return
-  data = { slots: d.slots.map((s) => ({ id: s.id, count: s.count })), expiresAt: d.expiresAt }
+  data = {
+    slots: d.slots.map((s) => ({ id: s.id, count: s.count })),
+    expiresAt: Math.min(d.expiresAt, Date.now() + SAVE_MS),
+  }
   persist()
+  scheduleExpiry()
   restoreFoods(data.slots)
   emit()
 }
