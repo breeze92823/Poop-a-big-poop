@@ -37,6 +37,8 @@ import {
 import { showActionResult } from './actionResult.js'
 import { hasTheftImmunity, hydrateImmunity, subscribeImmunity } from './theftImmunity.js'
 import { playFart } from './sfx.js'
+import { emitPoopBurst } from './poopFx.js'
+import { PALETTE } from '../materials/tile.js'
 import { getBoostData, hydrateBoost, subscribeBoost } from './boost.js'
 import { getSavedFoods, hydrateSavedFoods, subscribeFoodFx } from './foodFx.js'
 import { getTutorialStep, hydrateTutorial, isTutorialDone, subscribeTutorial } from './tutorial.js'
@@ -341,6 +343,7 @@ export function reportLocal(delta) {
     yaw: player.facing,
     moveBlend,
     grounded: player.grounded,
+    bending: player.bending,
   }
   const last = lastSentMove
   if (
@@ -350,7 +353,8 @@ export function reportLocal(delta) {
     Math.abs(next.z - last.z) < MOVE_EPS &&
     Math.abs(next.yaw - last.yaw) < MOVE_EPS &&
     Math.abs(next.moveBlend - last.moveBlend) < MOVE_EPS &&
-    next.grounded === last.grounded
+    next.grounded === last.grounded &&
+    next.bending === last.bending
   ) {
     return
   }
@@ -525,6 +529,7 @@ function attachRoom(joined) {
       if (seq === lastSeq) return
       lastSeq = seq
       playFart(Math.hypot(p.x - player.position.x, p.y - player.position.y, p.z - player.position.z))
+      emitPoopBurst({ x: p.x, y: p.y, z: p.z, facing: p.yaw, height: player.dims.height, color: FOODS.find((f) => f.id === p.poopType)?.color ?? PALETTE.poop })
     })
   })
   $(room.state).players.onRemove((_p, sessionId) => {

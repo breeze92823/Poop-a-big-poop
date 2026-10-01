@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { settings } from '../systems/settingsState.js'
 import { useSettings } from '../systems/bloxityHooks.js'
 import { login, subscribeAuth } from '../systems/bloxity.js'
+import { player } from '../systems/playerState.js'
 import InteractPrompt from './InteractPrompt.jsx'
 import ActionResult from './ActionResult.jsx'
 import FoodShop from './FoodShop.jsx'
@@ -41,21 +42,32 @@ const CHARGE_PERIOD = 1200 // ms for the bar to fill (then drain) once
 const NEEDLE_PERIOD = 1600 // ms for the needle to sweep across and back
 const REWARD_MAX = 100 // poop stored for a full-power (100%) charge bar
 
-// Timing meter geometry, as % of the meter box (mirrors .hud-meter-zone / -sweet in index.css).
+// Timing meter geometry, as % of the meter box. The green zone (and the red centre inside it, at
+// SWEET_AT / SWEET_W of the zone) is re-rolled at random: size and position both change.
 const NEEDLE_MIN = 4
 const NEEDLE_MAX = 96
-const ZONE_L = 33
-const ZONE_R = 73
-const RED_L = 51.8
-const RED_R = 53.6
+const ZONE_W_MIN = 20
+const ZONE_W_MAX = 46
+const SWEET_AT = 0.47 // red centre's left edge, fraction of the zone width (mirrors .hud-meter-sweet)
+const SWEET_W = 0.045 // red centre's width, fraction of the zone width
+const FAST_CHANCE = 0.35 // chance a corner-to-corner sweep runs at double speed
+
+function randomZone() {
+  const w = ZONE_W_MIN + Math.random() * (ZONE_W_MAX - ZONE_W_MIN)
+  const l = NEEDLE_MIN + Math.random() * (NEEDLE_MAX - NEEDLE_MIN - w)
+  return { l, w }
+}
 
 // Progress gained (0..1 of the bar) for a needle landing at `pos` (%): red is best, green scales with
 // closeness to the red, anywhere else is a miss.
-function hitGain(pos) {
-  if (pos >= RED_L && pos <= RED_R) return 0.4
-  if (pos < ZONE_L || pos > ZONE_R) return 0
-  const edge = pos < RED_L ? RED_L - ZONE_L : ZONE_R - RED_R
-  const dist = pos < RED_L ? RED_L - pos : pos - RED_R
+function hitGain(pos, { l, w }) {
+  const zoneR = l + w
+  const redL = l + w * SWEET_AT
+  const redR = redL + w * SWEET_W
+  if (pos >= redL && pos <= redR) return 0.4
+  if (pos < l || pos > zoneR) return 0
+  const edge = pos < redL ? redL - l : zoneR - redR
+  const dist = pos < redL ? redL - pos : pos - redR
   return 0.1 + 0.2 * (1 - dist / edge)
 }
 
@@ -95,6 +107,8 @@ function LoginButton() {
   )
 }
 
+const POOP_HOLD_MS = 1800 // how long the player stays bent after a poop drops
+
 function useMoney() {
   return useSyncExternalStore(subscribeMoney, getMoney)
 }
@@ -111,9 +125,12 @@ export default function Hud() {
   const [progress, setProgress] = useState(0) // 0..1; reaching 1 pays out charge * REWARD_MAX
   const live = useRef(0)
   const chargeId = useRef(null) // pointer that started the charge, so another finger can't end it
+  const dropped = useRef(false) // a poop just dropped: hold the bend a moment after the meter closes
   const needle = useRef(null)
   const needlePos = useRef(0) // live needle position, % of the meter box
-  const st = useRef({ phase: 'idle', charge: 0, progress: 0 })
+  const [zone, setZone] = useState(randomZone)
+  const st = useRef({ phase: 'idle', charge: 0, progress: 0, zone })
+  st.current.zone = zone
   st.current.phase = phase
   st.current.charge = charge
   st.current.progress = progress
@@ -122,9 +139,16 @@ export default function Hud() {
   useEffect(() => {
     if (phase !== 'meter') return
     let raf
-    const t0 = performance.now()
+    // `ph` counts half-sweeps (corner to corner); each one randomly runs at double speed.
+    let ph = 0
+    let speed = 1
+    let last = performance.now()
     const tick = (now) => {
-      const p = ((now - t0) / NEEDLE_PERIOD) % 2
+      const prev = ph
+      ph += ((now - last) / NEEDLE_PERIOD) * speed
+      last = now
+      if (Math.floor(ph) !== Math.floor(prev)) speed = Math.random() < FAST_CHANCE ? 2 : 1
+      const p = ph % 2
       const v = p < 1 ? p : 2 - p
       needlePos.current = NEEDLE_MIN + (NEEDLE_MAX - NEEDLE_MIN) * v
       if (needle.current) needle.current.style.left = `${needlePos.current}%`
@@ -137,6 +161,26 @@ export default function Hud() {
   useEffect(() => {
     if (phase === 'meter') reportTutorialEvent('hold')
   }, [phase])
+
+  // The character bends over while the charge bar or timing meter is showing.
+  // After a poop drops it stays bent for POOP_HOLD_MS so the particles play out before standing up.
+  useEffect(() => {
+    if (phase !== 'idle') {
+      player.bending = true
+      return
+    }
+    const t = setTimeout(() => {
+      player.bending = false
+    }, dropped.current ? POOP_HOLD_MS : 0)
+    dropped.current = false
+    return () => clearTimeout(t)
+  }, [phase])
+  useEffect(
+    () => () => {
+      player.bending = false
+    },
+    [],
+  )
 
   useEffect(() => {
     const down = (e) => {
@@ -156,8 +200,9 @@ export default function Hud() {
         setPhase('charging')
       } else if (s.phase === 'meter') {
         // Land the needle: red/green fills the progress bar, a miss hides the meter.
-        const gain = hitGain(needlePos.current)
+        const gain = hitGain(needlePos.current, s.zone)
         if (gain === 0) {
+          setProgress(0)
           setPhase('idle')
           return
         }
@@ -166,16 +211,19 @@ export default function Hud() {
           // A selected hotbar food is eaten and wins; otherwise a selected poop passes on its type.
           const id = consumeSelected() ?? getSelectedPoopType()
           awardPoop(Math.round(s.charge * REWARD_MAX), FOODS.find((f) => f.id === id))
+          dropped.current = true
           setProgress(0)
           setPhase('idle')
         } else {
           setProgress(next)
+          setZone(randomZone())
         }
       }
     }
     const up = (e) => {
       if (e.button !== 0 || st.current.phase !== 'charging' || e.pointerId !== chargeId.current) return
       setCharge(live.current)
+      setZone(randomZone())
       setPhase('meter')
     }
     window.addEventListener('pointerdown', down)
@@ -205,7 +253,7 @@ export default function Hud() {
       {phase === 'meter' && (
       <div className="hud-meter" data-charge={charge.toFixed(2)}>
         <div className="hud-meter-box">
-          <div className="hud-meter-zone">
+          <div className="hud-meter-zone" style={{ left: `${zone.l}%`, width: `${zone.w}%` }}>
             <div className="hud-meter-sweet" />
           </div>
           <div className="hud-meter-needle" ref={needle}>

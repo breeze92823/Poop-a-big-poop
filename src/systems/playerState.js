@@ -7,6 +7,7 @@ export const player = {
   position: { x: 0, y: 0, z: 0 },
   velocity: { x: 0, y: 0, z: 0 },
   grounded: true,
+  bending: false, // true while the HUD charge bar / timing meter is up: the character bends over to poop
   facing: Math.PI, // yaw the character model faces, radians
   moveSpeed: PLAYER_MOVE_SPEED,
   dims: { radius: 0.4, height: 1.8 },
