@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { settings } from '../systems/settingsState.js'
 import { useSettings } from '../systems/bloxityHooks.js'
+import { login, subscribeAuth } from '../systems/bloxity.js'
 import InteractPrompt from './InteractPrompt.jsx'
 import ActionResult from './ActionResult.jsx'
 import FoodShop from './FoodShop.jsx'
@@ -75,6 +76,19 @@ function ChargeBar({ valueRef }) {
     <div className="hud-vbar" aria-hidden>
       <div className="hud-vbar-fill" ref={fill} />
     </div>
+  )
+}
+
+// Shown only to signed-out players (guests); hidden once signed in, and until
+// the first auth state arrives so it doesn't flash for a signed-in player.
+function LoginButton() {
+  const [signedOut, setSignedOut] = useState(false)
+  useEffect(() => subscribeAuth((s) => setSignedOut(s.ready && !s.user)), [])
+  if (!signedOut) return null
+  return (
+    <button type="button" className="hud-login" onClick={login}>
+      Bloxity Login
+    </button>
   )
 }
 
@@ -159,6 +173,7 @@ export default function Hud() {
   return (
     <div className="hud" style={{ '--hud-alpha': settings.background_transparency }}>
       {settings.show_fps && <FpsMeter />}
+      <LoginButton />
 
       <InteractPrompt />
       <ActionResult />
