@@ -83,22 +83,6 @@ export function stripeTexture(color) {
   }, { repeat: true })
 }
 
-// A banknote bundle: green bill with a paler centre panel and paper band.
-export function cashTexture() {
-  return canvasTexture('cash', 128, 64, (ctx, w, h) => {
-    ctx.fillStyle = '#7cc66a'
-    ctx.fillRect(0, 0, w, h)
-    ctx.fillStyle = '#b9e6a8'
-    ctx.fillRect(8, 8, w - 16, h - 16)
-    ctx.fillStyle = '#5fa851'
-    ctx.beginPath()
-    ctx.arc(w / 2, h / 2, h * 0.22, 0, Math.PI * 2)
-    ctx.fill()
-    ctx.fillStyle = '#f2f6ee'
-    ctx.fillRect(w * 0.42, 0, w * 0.16, h)
-  })
-}
-
 // Dark leaderboard / notice panel with a title and faint rows of text.
 export function boardTexture(title, seed = 1) {
   return canvasTexture(`board-${title}-${seed}`, 512, 320, (ctx, w, h) => {

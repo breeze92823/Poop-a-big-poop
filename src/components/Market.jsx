@@ -1,17 +1,15 @@
 import { useMemo } from 'react'
-import { BOOST_SIGN, CASH, FOOD_SIGN, MONEY_SIGN, POTTY, SIGNS, STALLS, VALUE_SIGN, facePad } from '../data/world.js'
+import { BOOST_SIGN, FOOD_SIGN, MONEY_SIGN, POTTY, SIGNS, STALLS, VALUE_SIGN, facePad } from '../data/world.js'
 import { PALETTE, tileMaterial } from '../materials/tile.js'
 import {
   bigSignTexture,
   blockFaceTexture,
-  cashTexture,
   outlineTagTexture,
   pottyDoorTexture,
   shirtTexture,
   signTexture,
   stripeTexture,
 } from '../utils/textures.js'
-import { seededRandom } from '../utils/random.js'
 
 const W = 3.2 // stall width
 const D = 1.8 // stall depth
@@ -293,37 +291,6 @@ function Potty({ x, z }) {
   )
 }
 
-// A loose mound of banknote bundles.
-function CashPile({ x, z }) {
-  const map = useMemo(() => cashTexture(), [])
-  const bundles = useMemo(() => {
-    const rand = seededRandom(9)
-    const out = []
-    const layers = [[11, 0.85], [7, 0.6], [4, 0.38], [1, 0.05]]
-    layers.forEach(([n, spread], layer) => {
-      for (let i = 0; i < n; i++) {
-        const a = rand() * Math.PI * 2
-        const d = Math.sqrt(rand()) * spread
-        out.push({
-          p: [Math.cos(a) * d, 0.08 + layer * 0.17, Math.sin(a) * d],
-          r: [(rand() - 0.5) * 0.35, rand() * Math.PI, (rand() - 0.5) * 0.35],
-        })
-      }
-    })
-    return out
-  }, [])
-  return (
-    <group position={[x, 0, z]}>
-      {bundles.map((b, i) => (
-        <mesh key={i} position={b.p} rotation={b.r} castShadow receiveShadow>
-          <boxGeometry args={[0.7, 0.16, 0.34]} />
-          <meshStandardMaterial map={map} roughness={0.9} />
-        </mesh>
-      ))}
-    </group>
-  )
-}
-
 // Picket sign: one post, a small lettered board facing the pad.
 function Sign({ x, z, text }) {
   const wood = tileMaterial({ top: PALETTE.wood, mottle: 0.3, mottleScale: 0.5, roughness: 0.9 })
@@ -355,7 +322,6 @@ export default function Market() {
       <BigSign {...BOOST_SIGN} lines={BOOST_LINES} turn={-0.15} board="#4a3329" ink="#f5d63a" />
       <BigSign {...FOOD_SIGN} lines={FOOD_LINES} turn={0.35} ink="#3fd6b8" />
       <Potty {...POTTY} />
-      <CashPile {...CASH} />
       {SIGNS.map((s, i) => <Sign key={i} {...s} text={i ? 'SHOP' : 'SELL'} />)}
     </group>
   )

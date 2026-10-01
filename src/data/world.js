@@ -4,7 +4,7 @@
 //
 //                 bare tree + bush (N rim)
 //            [buy stall] [potty] [sell stall]
-//                     $$ cash pile           brown blocks (NE rim)
+//                                            brown blocks (NE rim)
 //   board+NPC                                  [EAST CLIFF] fallen column
 //   [WEST CLIFF]          ( swirl pad )         short pillar, rocks
 //   column, bush                                 (chained jar, SE)
@@ -63,7 +63,6 @@ export const FOOD_SIGN = { x: -8.3, z: 11.6 }
 // Dark "DAILY SIZE BOOST" board on the pad-facing right of the Daily Size Boost Stall.
 export const BOOST_SIGN = { x: 10.5, z: 13.4 }
 export const POTTY = { x: -1.1, z: -15.6 }
-export const CASH = { x: -1.1, z: -10.6 }
 
 // Bare tree + leafy bush pairs.
 export const TREES = [

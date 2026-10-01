@@ -23,7 +23,7 @@ and `:` is the Swirl Pad.
              ##                 P                  k##
             #             R  h     s  B             k #
            #            V                M       b   EE#EE
- -10      #                     $                  EEEEE#EE
+ -10      #                                        EEEEE#EE
          #      T            :::::::::             EEEEEE#EE
         #  N      F        :::       :::       C r  EEEEEE#
         #  d              ::           ::         r  eeee #
@@ -48,7 +48,7 @@ and `:` is the Swirl Pad.
 | `@` | Spawn (pad centre is 1.5 m north) | `R` `B` | Buy Stall, Sell Stall |
 | `Y` | Daily Size Boost Stall | `T` | Save Food Effect Stall |
 | `V` `M` | Value Sign, Money Sign | `F` `K` | Save Food Sign, Boost Sign |
-| `P` | Potty | `$` | Cash Pile |
+| `P` | Potty | | |
 | `h` `s` | SHOP Sign, SELL Sign | `t` | Trees (North, South, Boost) |
 | `b` | Bushes | `W` | West Cliff (footprint) |
 | `E` `e` | East Cliff, East Step (footprints) | `k` | NE Blocks 1-4 |
@@ -78,7 +78,6 @@ and `:` is the Swirl Pad.
 | **Poop Buyer** | behind the Sell Stall counter | `STALLS[1].vendor` | Market.jsx (`Vendor`) | Blocky shopkeeper in a denim shirt with short brown hair, white "SELL POOP" tag overhead. |
 | **Make Money Sign** | (8.5, -12.6) | `MONEY_SIGN` | Market.jsx (`BigSign`) | Big plank board reading "MAKE MONEY", east of the Sell Stall, angled toward it. |
 | **Potty** | (-1.1, -15.6) | `POTTY` | Market.jsx | Tan porta-potty, door with an orange moon. |
-| **Cash Pile** | (-1.1, -10.6) | `CASH` | Market.jsx | Mound of green banknote bundles. |
 | **SELL Sign** | (1.8, -14.4) | `SIGNS[0]` | Market.jsx | Small picket sign between the Potty and the Sell Stall. |
 | **SHOP Sign** | (-4.2, -14.6) | `SIGNS[1]` | Market.jsx | Small picket sign between the Buy Stall and the Potty. |
 | **North Tree** | (-4, -22) | `TREES[0]` | [Vegetation.jsx](src/components/Vegetation.jsx) | Bare, leafless tree on the north edge. |
