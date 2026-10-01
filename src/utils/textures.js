@@ -280,8 +280,8 @@ export function outlineTagTexture(text, fill = '#ffffff') {
 
 // Prize label: a big cyan title over a smaller white caption, both in a thick
 // black outline, on transparent (for a sprite).
-export function jarLabelTexture(title, caption) {
-  return canvasTexture(`jarlabel-${title}-${caption}`, 1024, 256, (ctx, w) => {
+export function jarLabelTexture(title, caption, titleColor = '#19d3ff') {
+  return canvasTexture(`jarlabel-${title}-${caption}-${titleColor}`, 1024, 256, (ctx, w) => {
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
     ctx.lineJoin = 'round'
@@ -295,7 +295,7 @@ export function jarLabelTexture(title, caption) {
       ctx.fillStyle = fill
       ctx.fillText(text, w / 2, y)
     }
-    line(title, 118, 88, '#19d3ff', 24)
+    line(title, 118, 88, titleColor, 24)
     line(caption, 52, 190, '#ffffff', 14)
   })
 }
@@ -388,5 +388,107 @@ export function shirtTexture(color) {
     }
     ctx.strokeStyle = 'rgba(0,0,0,0.3)'
     ctx.strokeRect(w * 0.62, h * 0.3, w * 0.2, h * 0.18)
+  })
+}
+
+// Treasure chest wood: four horizontal red-brown planks with dark seams and
+// streaky grain, like the cartoon chest it copies.
+export function plankTexture() {
+  return canvasTexture('planks', 256, 256, (ctx, S) => {
+    const rand = seededRandom(17)
+    const n = 4
+    const ph = S / n
+    for (let i = 0; i < n; i++) {
+      const y = i * ph
+      const g = ctx.createLinearGradient(0, y, 0, y + ph)
+      g.addColorStop(0, '#9a5430')
+      g.addColorStop(0.5, '#86452a')
+      g.addColorStop(1, '#6a321c')
+      ctx.fillStyle = g
+      ctx.fillRect(0, y, S, ph)
+      // Wavy grain streaks.
+      for (let k = 0; k < 9; k++) {
+        const gy = y + 4 + rand() * (ph - 8)
+        ctx.strokeStyle = rand() < 0.5 ? 'rgba(40,14,4,0.35)' : 'rgba(255,190,140,0.18)'
+        ctx.lineWidth = 1 + rand() * 2
+        ctx.beginPath()
+        ctx.moveTo(0, gy)
+        const amp = 1 + rand() * 3
+        const f = 0.02 + rand() * 0.03
+        for (let x = 0; x <= S; x += 8) ctx.lineTo(x, gy + Math.sin(x * f + k) * amp)
+        ctx.stroke()
+      }
+      ctx.fillStyle = '#3a1608'
+      ctx.fillRect(0, y, S, 3)
+    }
+  })
+}
+
+// Soft golden radial glow for the chest's ground halo and sparkles.
+export function goldGlowTexture() {
+  return canvasTexture('gold-glow', 256, 256, (ctx, S) => {
+    const c = S / 2
+    const g = ctx.createRadialGradient(c, c, 0, c, c, c)
+    g.addColorStop(0, 'rgba(255,236,150,1)')
+    g.addColorStop(0.35, 'rgba(255,196,40,0.7)')
+    g.addColorStop(1, 'rgba(255,160,0,0)')
+    ctx.fillStyle = g
+    ctx.fillRect(0, 0, S, S)
+  })
+}
+
+// A god ray: bright at the bottom, fading up and to both sides.
+export function rayTexture() {
+  return canvasTexture('ray', 64, 256, (ctx, w, h) => {
+    const up = ctx.createLinearGradient(0, h, 0, 0)
+    up.addColorStop(0, 'rgba(255,230,140,1)')
+    up.addColorStop(1, 'rgba(255,200,60,0)')
+    ctx.fillStyle = up
+    ctx.fillRect(0, 0, w, h)
+    ctx.globalCompositeOperation = 'destination-in'
+    const side = ctx.createLinearGradient(0, 0, w, 0)
+    side.addColorStop(0, 'rgba(0,0,0,0)')
+    side.addColorStop(0.5, 'rgba(0,0,0,1)')
+    side.addColorStop(1, 'rgba(0,0,0,0)')
+    ctx.fillStyle = side
+    ctx.fillRect(0, 0, w, h)
+  })
+}
+
+// Treasure chest label: gold title over a badge, glowing green while the chest can still be
+// opened (`tone` 'free') or grey once it's opened / emptied ('done').
+export function chestLabelTexture(text = 'FREE!', tone = 'free') {
+  return canvasTexture(`chest-label-${tone}-${text}`, 1024, 320, (ctx, w) => {
+    const free = tone === 'free'
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.lineJoin = 'round'
+    ctx.font = `104px ${LABEL_FONT}`
+    ctx.lineWidth = 24
+    ctx.strokeStyle = '#05060a'
+    ctx.strokeText('TREASURE CHEST', w / 2, 80)
+    ctx.fillStyle = free ? '#ffc61a' : '#9a8a55'
+    ctx.fillText('TREASURE CHEST', w / 2, 80)
+    // Badge: pill sized to the text, with a rim and (when free) a soft green halo.
+    ctx.font = `88px ${LABEL_FONT}`
+    const bw = Math.min(w - 40, ctx.measureText(text).width + 90)
+    const bh = 118
+    const x = w / 2 - bw / 2
+    const y = 188
+    ctx.shadowColor = free ? '#3dff6b' : 'transparent'
+    ctx.shadowBlur = free ? 34 : 0
+    ctx.fillStyle = free ? '#16c04a' : '#5d6068'
+    ctx.beginPath()
+    ctx.roundRect(x, y, bw, bh, bh / 2)
+    ctx.fill()
+    ctx.shadowBlur = 0
+    ctx.lineWidth = 8
+    ctx.strokeStyle = free ? '#ffffff' : '#c4c6cc'
+    ctx.stroke()
+    ctx.lineWidth = 14
+    ctx.strokeStyle = free ? '#0a5a22' : '#2b2d33'
+    ctx.strokeText(text, w / 2, y + bh / 2 + 4)
+    ctx.fillStyle = '#ffffff'
+    ctx.fillText(text, w / 2, y + bh / 2 + 4)
   })
 }

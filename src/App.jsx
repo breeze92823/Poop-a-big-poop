@@ -11,6 +11,8 @@ import Vegetation from './components/Vegetation.jsx'
 import Market from './components/Market.jsx'
 import Landmarks from './components/Landmarks.jsx'
 import ChainedJar from './components/ChainedJar.jsx'
+import TreasureChest from './components/TreasureChest.jsx'
+import TreasureFlight from './components/TreasureFlight.jsx'
 import Poops from './components/Poops.jsx'
 import GuideArrows from './components/GuideArrows.jsx'
 import Sky from './components/Sky.jsx'
@@ -71,6 +73,8 @@ export default function App() {
           <Market />
           <Landmarks />
           <ChainedJar />
+          <TreasureChest />
+          <TreasureFlight />
           <Poops />
           <LoadingGate onReady={onSceneReady} />
         </Suspense>
