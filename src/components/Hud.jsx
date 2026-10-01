@@ -5,6 +5,8 @@ import InteractPrompt from './InteractPrompt.jsx'
 import ActionResult from './ActionResult.jsx'
 import FoodShop from './FoodShop.jsx'
 import SellPoop from './SellPoop.jsx'
+import SizeBoost from './SizeBoost.jsx'
+import SaveFoodFx from './SaveFoodFx.jsx'
 import FoodBar from './FoodBar.jsx'
 import { FOODS } from '../systems/shop.js'
 import { consumeSelected } from '../systems/pantry.js'
@@ -162,6 +164,8 @@ export default function Hud() {
       <ActionResult />
       <FoodShop />
       <SellPoop />
+      <SizeBoost />
+      <SaveFoodFx />
       <FoodBar />
 
       <div className="hud-banner">

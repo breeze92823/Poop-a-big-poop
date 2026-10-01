@@ -1,4 +1,5 @@
 import { PALETTE } from '../materials/tile.js'
+import { getBoostMult } from './boost.js'
 
 // Meter-to-poop: a finished meter round drops a poop behind the player and stores its
 // yield in the inventory (selling it for money comes later). Plain module state, mutated
@@ -73,7 +74,7 @@ export function toggleStack(key) {
 // and a VALUE food multiplies the yield while a SIZE food makes the poop bigger.
 export function awardPoop(amount, food = null) {
   const kind = food ? { type: food.id, name: `${food.effect} Poop`, color: food.color } : { ...PLAIN, type: PLAIN.key }
-  const value = food && food.stat === 'VALUE' ? amount * food.mult : amount
+  const value = (food && food.stat === 'VALUE' ? amount * food.mult : amount) * getBoostMult()
   stacks = [...stacks, { ...kind, key: `p${nextId++}`, value }]
   inventory += value
   emitInventory()

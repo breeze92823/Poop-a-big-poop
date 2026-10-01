@@ -10,6 +10,8 @@ import { step as stepHold } from './interactHold.js'
 import { showActionResult } from './actionResult.js'
 import { getSellOpen, openSell } from './sellPanel.js'
 import { isShopOpen, openShop } from './shop.js'
+import { isBoostOpen, openBoost } from './boost.js'
+import { isFoodFxOpen, openFoodFx } from './foodFx.js'
 
 // The zone the player is standing in (nearest wins), or null. Read by
 // InteractPrompt / TouchControls at ~10Hz.
@@ -36,13 +38,19 @@ const ACTIONS = {
   sell() {
     openSell()
   },
+  boost() {
+    openBoost()
+  },
+  foodFx() {
+    openFoodFx()
+  },
   jar() {
     showActionResult('Locked', false)
   },
 }
 
 export function step() {
-  const zone = isShopOpen() || getSellOpen() ? null : nearestZone()
+  const zone = isShopOpen() || getSellOpen() || isBoostOpen() || isFoodFxOpen() ? null : nearestZone()
   interactState.zone = zone
   if (!stepHold(zone ? zone.id : null, isInteractKeyDown())) return
   const act = ACTIONS[zone.id]

@@ -50,16 +50,16 @@ export const STALLS = [
   { x: 4.9, z: -13.7, stripe: '#3d8fe0', vendor: 'SELL POOP' }, // SELL stall (Make Money): blue/white, plank fence + vendor
   // DAILY SIZE BOOST stall: yellow/white stand, south-east of the pad: shopkeeper in a peaked cap
   { x: 13, z: 11.5, stripe: '#f2c81c', vendor: 'SIZE BOOST', tag: '#f5d63a', look: 'cap' },
-  // SAVE FOOD EFFECT stall: teal/white stand, next to the West Reward NPC
-  { x: -16.6, z: -8.6, stripe: '#25b89a', vendor: '24 HOURS ONLY', tag: '#3fd6b8', look: 'ginger' },
+  // SAVE FOOD EFFECT stall: teal/white stand, beside the Daily Reward NPC
+  { x: -10.5, z: 9.5, stripe: '#25b89a', vendor: '24 HOURS ONLY', tag: '#3fd6b8', look: 'ginger' },
 ]
 // Big "INCREASE POOP VALUE" board beside the Buy Stall, on its west side.
 export const VALUE_SIGN = { x: -9.4, z: -11.2 }
 // Big "MAKE MONEY" board beside the Sell Stall, on the pad side of it.
 export const MONEY_SIGN = { x: 8.5, z: -12.6 }
 // Big teal-lettered "SAVE FOOD EFFECTS" board beside the Save Food Effect Stall, on its
-// south-west (left, seen from the pad) side.
-export const FOOD_SIGN = { x: -14.8, z: -5.4 }
+// south-east side, level with the stall like the Boost Sign.
+export const FOOD_SIGN = { x: -8.3, z: 11.6 }
 // Dark "DAILY SIZE BOOST" board on the pad-facing right of the Daily Size Boost Stall.
 export const BOOST_SIGN = { x: 10.5, z: 13.4 }
 export const POTTY = { x: -1.1, z: -15.6 }

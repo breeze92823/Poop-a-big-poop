@@ -93,9 +93,9 @@ and `:` is the Swirl Pad.
 | **Marble Column** | (-19.9, 5) | `COLUMNS[0]` | [Landmarks.jsx](src/components/Landmarks.jsx) | White Ionic column, 5.2 m, standing at the cliff's foot. |
 | **Column Bush** | (-19.4, 6.8) | `BUSHES[0]` | Vegetation.jsx | Bush at the base of the Marble Column. |
 | **West Rim Bush** | (-25.2, -1.4) | `BUSHES[3]` | Vegetation.jsx | Small bush behind the West Cliff. |
-| **Save Food Effect Stall** | (-16.6, -8.6) | `STALLS[3]` | Market.jsx (`VendorStall`) | Limited-time food stand: square wooden posts, flat teal/white striped awning, two-plank fence with a grey counter rail. Faces the pad. |
+| **Save Food Effect Stall** | (-10.5, 9.5) | `STALLS[3]` | Market.jsx (`VendorStall`) | Limited-time food stand: square wooden posts, flat teal/white striped awning, two-plank fence with a grey counter rail. Faces the pad, 6 m east of the Reward NPC. |
 | **Deal Vendor** | behind the Save Food Effect Stall counter | `STALLS[3].vendor`, `.look` | Market.jsx (`Vendor`) | Ginger long-haired shopkeeper in navy, teal "24 HOURS ONLY" tag overhead. |
-| **Save Food Sign** | (-14.8, -5.4) | `FOOD_SIGN` | Market.jsx (`BigSign`) | Big plank board reading "SAVE FOOD EFFECTS" in teal letters, south-east of the Save Food Effect Stall (toward the pad), angled toward it. |
+| **Save Food Sign** | (-8.3, 11.6) | `FOOD_SIGN` | Market.jsx (`BigSign`) | Big plank board reading "SAVE FOOD EFFECTS" in teal letters, beside the Save Food Effect Stall on its south-east side, angled toward it. |
 | **Reward NPC** | (-16.6, 9.8) | `NPCS[0]` | Landmarks.jsx (`Npc`) | Brown blocky figure, arm held out, with a "CLAIM ONCE PER 24 HOURS" tag overhead, south-east of the West Cliff. |
 | **Reward Board** | (-14.8, 11.2) | `NPCS[0].board` | Landmarks.jsx (`RewardBoard`) | Wooden "DAILY REWARD" board. The lettered side faces the pad. |
 
@@ -152,6 +152,7 @@ All in [Hud.jsx](src/components/Hud.jsx) and styled in [index.css](src/index.css
 | **Interact Prompt** | lower-centre (70% down) | `.interact-prompt` | [InteractPrompt.jsx](src/components/InteractPrompt.jsx); dark card with an **E** keycap + label, shown inside any Interact Zone. Holding E for 2 s fills a white ring around the keycap (card shrinks to just the enlarged keycap while held); releasing early snaps it back. Ported from Laser-Escape. |
 | **Action Result** | top centre, below the FPS row | `.action-result` | [ActionResult.jsx](src/components/ActionResult.jsx); black fading bar that pops in with a green (success) or red (blocked) line, e.g. "Sold for $0.40", "Nothing to sell", "Locked", "Coming soon". |
 | **Buy Food Shop** | full-screen modal, centred | `.shop-overlay` | [FoodShop.jsx](src/components/FoodShop.jsx), state in `systems/shop.js` (`FOODS`); yellow "FOOD & THEIR EFFECTS EXPIRE..." warning above a brown panel with a yellow "New foods in 2m 11s" header, red X close and scrolling food cards (icon, name, stock, green price, multiplier, mutation, rarity). Click a card to buy; Esc/E/X closes. |
+| **Daily Size Boost Window** | full-screen modal, centred | `.boost-panel` | [SizeBoost.jsx](src/components/SizeBoost.jsx), state in `systems/boost.js` (`DAY_MULTS`); yellow "DAILY SIZE BOOST" header with a blue Skip Timer button ($500K to unlock the next claim early), streak warning, "Today's Boost" card (active multiplier + time left), Day 1-7+ streak tiles (2x, 2.5x ... 5x, green check when claimed) and a green CLAIM button. A claim starts a 15-minute boost multiplying the yield of dropped poops (`awardPoop` in poop.js); progress saved in localStorage. Esc/E/X closes. |
 
 ### Interact zones (hold E)
 
@@ -161,8 +162,8 @@ Defined in `INTERACTS` ([world.js](src/data/world.js)); logic in [interact.js](s
 |---|---|---|---|---|
 | `buy` | Buy Stall | 3.6 | Buy Food | Opens the Buy Food shop |
 | `sell` | Sell Stall | 3.6 | Sell Poop | Sells the whole Poop Inventory at `SELL_RATE` ($0.01 each, [poop.js](src/systems/poop.js)) |
-| `boost` | Daily Size Boost Stall | 3.6 | Claim Size Boost | Coming soon |
-| `foodFx` | Save Food Effect Stall | 3.6 | Save Food Effects | Coming soon |
+| `boost` | Daily Size Boost Stall | 3.6 | Claim Size Boost | Opens the Daily Size Boost window |
+| `foodFx` | Save Food Effect Stall | 3.6 | Save Food Effects | Opens the Save Mutations window (SaveFoodFx.jsx): $200 keeps held foods for 24 h |
 | `reward` | Reward NPC | 2.6 | Claim Reward | Coming soon |
 | `jar` | Locked Jar | 2.8 | Open Jar | "Locked" |
 

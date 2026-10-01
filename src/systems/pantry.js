@@ -30,6 +30,18 @@ export function addFood(id) {
   emit()
 }
 
+// Merges saved foods ([{ id, count }], see systems/foodFx.js) back into the pantry.
+export function restoreFoods(saved) {
+  for (const { id, count } of saved) {
+    const i = slots.findIndex((s) => s.id === id)
+    slots =
+      i < 0
+        ? [...slots, { id, count }]
+        : slots.map((s, j) => (j === i ? { ...s, count: s.count + count } : s))
+  }
+  emit()
+}
+
 // Picks a food; picking the already-selected one puts it away.
 export function toggleSelect(id) {
   selected = selected === id ? null : id
