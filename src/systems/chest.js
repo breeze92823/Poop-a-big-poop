@@ -9,7 +9,7 @@ import { addFood } from './pantry.js'
 import { player } from './playerState.js'
 import { showActionResult } from './actionResult.js'
 
-export const CHEST_MAX_OPENS = 2 // keep == backend CHEST_MAX_OPENS
+export const CHEST_MAX_OPENS = 5 // keep == backend CHEST_MAX_OPENS
 export const CHEST_MONEY = 2000
 export const CHEST_FOOD = 'donut' // Glazed Donut (systems/shop.js FOODS)
 

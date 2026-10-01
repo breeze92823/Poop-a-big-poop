@@ -445,7 +445,7 @@ export default function TreasureChest() {
       <pointLight ref={front} position={[0, 1, 1.7]} color="#ffd36a" intensity={3} distance={10} decay={1.5} />
 
       <sprite ref={label} position={[0, 2.6, 0]} scale={[3.4, 1.06, 1]} renderOrder={10}>
-        <spriteMaterial map={chestLabelTexture('FREE! 2 LEFT')} depthWrite={false} toneMapped={false} fog={false} />
+        <spriteMaterial map={chestLabelTexture('FREE! 5 LEFT')} depthWrite={false} toneMapped={false} fog={false} />
       </sprite>
 
       <group ref={body}>
