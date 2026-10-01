@@ -21,6 +21,11 @@ export function getPantry() {
   return snapshot
 }
 
+// Total foods held (every slot's count).
+export function getFoodCount() {
+  return slots.reduce((n, s) => n + s.count, 0)
+}
+
 export function addFood(id) {
   const i = slots.findIndex((s) => s.id === id)
   slots =

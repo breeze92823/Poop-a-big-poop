@@ -7,7 +7,7 @@
 // owns the stock and pushes it through net.js -> applyServerShop, and a purchase
 // is only paid once the room confirms it got a unit. Offline the same schedule
 // is computed from the clock and played locally.
-import { getLastSale, getMoney, spendMoney } from './poop.js'
+import { MAX_POOPS, getLastSale, getMoney, isInventoryFull, spendMoney } from './poop.js'
 import { isBuyStep } from './tutorial.js'
 import { FIRST_FOOD } from '../data/tutorial.js'
 import { addFood } from './pantry.js'
@@ -216,6 +216,7 @@ export function stockOf(id) {
 export function buyFood(id) {
   const food = FOODS.find((f) => f.id === id)
   if (!food) return
+  if (isInventoryFull()) return showActionResult(`Inventory full (${MAX_POOPS}/${MAX_POOPS})`, false)
   if (!online) syncLocal()
   if (stockOf(id) <= 0 || food.price == null) return showActionResult('Out of stock', false)
   const tutorialUnit = stock[id] <= 0 // a unit the tutorial grants on an empty shelf
