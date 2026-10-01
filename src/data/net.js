@@ -14,7 +14,7 @@ export const SERVER_URL = import.meta.env.MODE === 'production' ? SERVER_URL_MAI
 // Build version sent when joining. The server (backend constants.ts MIN_CLIENT_VERSION) tells a
 // client below its minimum to reload the page. Raise both together to force everyone onto a new
 // deploy; leave them alone for deploys stale tabs can live with.
-export const CLIENT_VERSION = 1
+export const CLIENT_VERSION = 2
 
 // Room handler name registered in the backend's app.config.ts.
 export const ROOM_NAME = 'lobby'
