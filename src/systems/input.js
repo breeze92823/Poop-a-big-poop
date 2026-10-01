@@ -54,48 +54,6 @@ export function pressTouchPoop() {
   inputState.poop = true // consumed + cleared by GameLoop
 }
 
-// Touch sessions have no keyboard or mouse: components/TouchControls.jsx drives
-// `inputState` through the setters below. `active` flips once - on the first
-// real touch, or at install when the primary pointer is coarse - and never
-// flips back for the session.
-export const touchState = { active: false }
-const touchModeSubs = new Set()
-
-export function subscribeTouchMode(cb) {
-  touchModeSubs.add(cb)
-  return () => touchModeSubs.delete(cb)
-}
-
-function enableTouchMode() {
-  if (touchState.active) return
-  touchState.active = true
-  document.documentElement.classList.add('touch-mode')
-  touchModeSubs.forEach((cb) => cb(true))
-}
-
-// Analog stick, magnitude 0..1 (playerMovement scales speed by it).
-export function setTouchMove(x, z) {
-  inputState.move.x = x
-  inputState.move.z = z
-}
-
-export function addTouchLook(dx, dy) {
-  inputState.look.dx += dx
-  inputState.look.dy += dy
-}
-
-export function addTouchZoom(dz) {
-  inputState.zoom += dz
-}
-
-export function pressTouchJump() {
-  inputState.jump = true // consumed + cleared by playerMovement
-}
-
-export function pressTouchPoop() {
-  inputState.poop = true // consumed + cleared by GameLoop
-}
-
 const TAP_MAX_MS = 350
 const TAP_MAX_PX = 10
 let tap = null // { id, x, y, t } of the pointer that might become a tap

@@ -8,8 +8,8 @@
 //   board+NPC                                  [EAST CLIFF] fallen column
 //   [WEST CLIFF]          ( swirl pad )         short pillar, rocks
 //   column, bush                                 (chained jar, SE)
-//         board+NPC
-//                 bare tree + bush (S rim)
+//         board+NPC                    [yellow stall] boost sign
+//                 bare tree + bush (S rim)     tree + bush
 export const GROUND_Y = 0
 
 export const ISLAND = {
@@ -48,11 +48,20 @@ export const STALLS = [
   // red/white food stand: green tag, long-haired ginger shopkeeper in navy
   { x: -7.1, z: -14, stripe: '#e8323a', vendor: 'BUY FOOD', tag: '#7ae35a', look: 'ginger' },
   { x: 4.9, z: -13.7, stripe: '#3d8fe0', vendor: 'SELL POOP' }, // blue/white, plank fence + vendor
+  // yellow/white daily size-boost stand, south-east of the pad: shopkeeper in a peaked cap
+  { x: 13, z: 11.5, stripe: '#f2c81c', vendor: 'SIZE BOOST', tag: '#f5d63a', look: 'cap' },
+  // teal/white limited-time stand, next to the West Reward NPC
+  { x: -16.6, z: -8.6, stripe: '#25b89a', vendor: '24 HOURS ONLY', tag: '#3fd6b8', look: 'ginger' },
 ]
 // Big "INCREASE POOP VALUE" board beside the Red Stall, on its west side.
 export const VALUE_SIGN = { x: -9.4, z: -11.2 }
 // Big "MAKE MONEY" board beside the Blue Stall, on the pad side of it.
 export const MONEY_SIGN = { x: 8.5, z: -12.6 }
+// Big teal-lettered "SAVE FOOD EFFECTS" board beside the Teal Stall, on its
+// south-west (left, seen from the pad) side.
+export const FOOD_SIGN = { x: -14.8, z: -5.4 }
+// Dark "DAILY SIZE BOOST" board on the pad-facing right of the Yellow Stall.
+export const BOOST_SIGN = { x: 10.5, z: 13.4 }
 export const POTTY = { x: -1.1, z: -15.6 }
 export const CASH = { x: -1.1, z: -10.6 }
 
@@ -60,6 +69,7 @@ export const CASH = { x: -1.1, z: -10.6 }
 export const TREES = [
   { x: -4, z: -22, rot: 0.3, seed: 21, bush: [-1.2, -20.6] }, // north rim
   { x: 0.2, z: 20.4, rot: 2.1, seed: 33, bush: [3.2, 19] }, // south rim
+  { x: 9.3, z: 17.1, rot: 1.2, seed: 45, bush: [10.4, 15.6] }, // behind the Boost Sign
 ]
 export const BUSHES = [
   [-19.4, 6.8, 1.5],
@@ -81,7 +91,6 @@ export const ROCKS = [
 // Daily-reward NPCs (brown blocky figure + wooden board beside it). Stalls,
 // the potty, signs and NPCs all turn to face the pad (see facePad).
 export const NPCS = [
-  { x: -21.6, z: -6.4, label: 'CLAIM ONCE PER 24 HOURS', board: [-22.4, -3.6] },
   { x: -16.6, z: 9.8, label: 'CLAIM ONCE PER 24 HOURS', board: [-14.8, 11.2] },
 ]
 
@@ -105,6 +114,8 @@ export const OBSTACLES = [
   ...STALLS.map((s) => [s.x, s.z, s.vendor ? 2 : 1.8]),
   [VALUE_SIGN.x, VALUE_SIGN.z, 0.5],
   [MONEY_SIGN.x, MONEY_SIGN.z, 0.5],
+  [FOOD_SIGN.x, FOOD_SIGN.z, 0.5],
+  [BOOST_SIGN.x, BOOST_SIGN.z, 0.5],
   [POTTY.x, POTTY.z, 0.9],
   [JAR.x, JAR.z, 1.3],
   ...TREES.map((t) => [t.x, t.z, 0.35]),

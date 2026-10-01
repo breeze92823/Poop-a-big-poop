@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { CASH, MONEY_SIGN, POTTY, SIGNS, STALLS, VALUE_SIGN, facePad } from '../data/world.js'
+import { BOOST_SIGN, CASH, FOOD_SIGN, MONEY_SIGN, POTTY, SIGNS, STALLS, VALUE_SIGN, facePad } from '../data/world.js'
 import { PALETTE, tileMaterial } from '../materials/tile.js'
 import {
   bigSignTexture,
@@ -58,8 +58,8 @@ function Stall({ x, z, stripe }) {
 }
 
 // Muted grey-brown planks for the vendor stall and its sign.
-const plankMaterial = () =>
-  tileMaterial({ top: '#8c6e5e', side: '#7a5e4f', mottle: 0.25, mottleScale: 0.5, roughness: 0.9 })
+const plankMaterial = (top = '#8c6e5e', side = '#7a5e4f') =>
+  tileMaterial({ top, side, mottle: 0.25, mottleScale: 0.5, roughness: 0.9 })
 
 function useStripe(stripe) {
   return useMemo(() => {
@@ -71,10 +71,11 @@ function useStripe(stripe) {
 }
 
 // Shopkeeper outfits. `long` swaps the short quiff for shoulder-length,
-// side-swept hair.
+// side-swept hair; `cap` covers the hair with a peaked officer's cap.
 const LOOKS = {
   default: { skin: '#eac39a', shirt: '#43638c', sleeve: '#3d5b82', pants: '#2f405e', hair: '#3a2516' },
   ginger: { skin: '#f1cfa8', shirt: '#2e4566', sleeve: '#2a3f5e', pants: '#23324a', hair: '#d8692a', long: true },
+  cap: { skin: '#eac39a', shirt: '#26334f', sleeve: '#222e48', pants: '#1f2a40', hair: '#2a1d14', cap: true },
 }
 
 // Hair boxes as [size, position, rotation].
@@ -83,6 +84,8 @@ const SHORT_HAIR = [
   [[0.48, 0.32, 0.1], [0, 1.88, -0.2]],
   [[0.16, 0.08, 0.14], [0.04, 2.13, 0.08], [0.4, 0, -0.3]],
 ]
+// Only the back of the head shows under the cap.
+const CAP_HAIR = [[[0.46, 0.22, 0.08], [0, 1.9, -0.2]]]
 const LONG_HAIR = [
   [[0.5, 0.14, 0.5], [0, 2.06, -0.01]],
   [[0.3, 0.1, 0.32], [0.07, 2.12, 0.01], [0, 0, -0.22]],
@@ -91,6 +94,31 @@ const LONG_HAIR = [
   [[0.08, 0.42, 0.38], [0.25, 1.85, -0.03]],
   [[0.32, 0.1, 0.08], [-0.09, 1.98, 0.22], [0, 0, 0.28]],
 ]
+
+// Navy peaked cap: flat crown over a black band, a shiny peak and a small
+// gold badge on the front.
+function Cap() {
+  return (
+    <group>
+      <mesh position={[0, 2.12, -0.01]} castShadow>
+        <boxGeometry args={[0.52, 0.1, 0.52]} />
+        <meshStandardMaterial color="#1e2638" roughness={0.8} />
+      </mesh>
+      <mesh position={[0, 2.03, 0]} castShadow>
+        <boxGeometry args={[0.47, 0.09, 0.47]} />
+        <meshStandardMaterial color="#111318" roughness={0.6} />
+      </mesh>
+      <mesh position={[0, 2.0, 0.29]} rotation-x={0.25} castShadow>
+        <boxGeometry args={[0.4, 0.03, 0.16]} />
+        <meshStandardMaterial color="#0d0f14" roughness={0.3} />
+      </mesh>
+      <mesh position={[0, 2.07, 0.237]}>
+        <planeGeometry args={[0.08, 0.08]} />
+        <meshStandardMaterial color="#e3b23c" metalness={0.6} roughness={0.35} />
+      </mesh>
+    </group>
+  )
+}
 
 // Blocky shopkeeper (classic 0.4 m-per-stud proportions): printed shirt,
 // dark jeans, head and hands in skin tone, hair, and a floating tag in
@@ -136,12 +164,13 @@ function Vendor({ label, tagColor, look = 'default' }) {
         <planeGeometry args={[0.44, 0.42]} />
         <meshStandardMaterial map={face} roughness={0.8} />
       </mesh>
-      {(L.long ? LONG_HAIR : SHORT_HAIR).map(([size, pos, rot], i) => (
+      {(L.cap ? CAP_HAIR : L.long ? LONG_HAIR : SHORT_HAIR).map(([size, pos, rot], i) => (
         <mesh key={i} position={pos} rotation={rot} castShadow>
           <boxGeometry args={size} />
           <meshStandardMaterial color={L.hair} roughness={0.95} />
         </mesh>
       ))}
+      {L.cap && <Cap />}
       {/* Drawn over the awning so the raised game camera can still read it. */}
       <sprite position={[0, 2.36, 0]} scale={[1.2, 0.375, 1]} renderOrder={10}>
         <spriteMaterial map={tag} depthTest={false} depthWrite={false} toneMapped={false} fog={false} />
@@ -213,12 +242,12 @@ function VendorStall({ x, z, stripe, vendor, tag, look }) {
   )
 }
 
-// Big painted board ("MAKE MONEY", "INCREASE POOP VALUE"): chunky plank
+// Big painted board ("MAKE MONEY", "INCREASE POOP VALUE", "SAVE FOOD EFFECTS"): chunky plank
 // panel, slightly crooked and leaning back, on one thick post behind it.
-// `turn` angles it toward its stall.
-function BigSign({ x, z, lines, turn }) {
-  const wood = plankMaterial()
-  const face = useMemo(() => bigSignTexture(lines), [lines])
+// `turn` angles it toward its stall; `board` recolours the panel.
+function BigSign({ x, z, lines, turn, board, ink }) {
+  const wood = board ? plankMaterial(board, board) : plankMaterial()
+  const face = useMemo(() => bigSignTexture(lines, board, ink), [lines, board, ink])
   return (
     <group position={[x, 0, z]} rotation-y={facePad(x, z) + turn}>
       <mesh position={[0, 1.0, -0.24]} material={wood} castShadow receiveShadow>
@@ -314,6 +343,8 @@ function Sign({ x, z, text }) {
 
 const MONEY_LINES = ['MAKE', 'MONEY']
 const VALUE_LINES = ['INCREASE', 'POOP VALUE']
+const BOOST_LINES = ['DAILY', 'SIZE BOOST']
+const FOOD_LINES = ['SAVE FOOD', 'EFFECTS']
 
 export default function Market() {
   return (
@@ -321,6 +352,8 @@ export default function Market() {
       {STALLS.map((s, i) => (s.vendor ? <VendorStall key={i} {...s} /> : <Stall key={i} {...s} />))}
       <BigSign {...MONEY_SIGN} lines={MONEY_LINES} turn={-0.35} />
       <BigSign {...VALUE_SIGN} lines={VALUE_LINES} turn={0.35} />
+      <BigSign {...BOOST_SIGN} lines={BOOST_LINES} turn={-0.15} board="#4a3329" ink="#f5d63a" />
+      <BigSign {...FOOD_SIGN} lines={FOOD_LINES} turn={0.35} ink="#3fd6b8" />
       <Potty {...POTTY} />
       <CashPile {...CASH} />
       {SIGNS.map((s, i) => <Sign key={i} {...s} text={i ? 'SHOP' : 'SELL'} />)}

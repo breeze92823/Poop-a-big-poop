@@ -270,6 +270,9 @@ export function pillLabelTexture(text) {
 export function outlineTagTexture(text, fill = '#ffffff') {
   return canvasTexture(`tag-${text}-${fill}`, 512, 160, (ctx, w) => {
     ctx.font = `76px ${LABEL_FONT}`
+    // Shrink long labels to fit inside the outline margin.
+    const width = ctx.measureText(text).width
+    if (width > w - 32) ctx.font = `${Math.floor((76 * (w - 32)) / width)}px ${LABEL_FONT}`
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
     ctx.lineJoin = 'round'
@@ -291,10 +294,10 @@ export function outlineTagTexture(text, fill = '#ffffff') {
   })
 }
 
-// Big painted board face: muted brown planks with chunky white words in a
-// black outline, one word per line.
-export function bigSignTexture(lines, board = '#86685a') {
-  return canvasTexture(`bigsign-${lines.join('|')}`, 512, 352, (ctx, w, h) => {
+// Big painted board face: muted brown planks with chunky words (white unless
+// `ink` is given) in a black outline, one word per line.
+export function bigSignTexture(lines, board = '#86685a', ink = '#ffffff') {
+  return canvasTexture(`bigsign-${lines.join('|')}-${board}-${ink}`, 512, 352, (ctx, w, h) => {
     const rand = seededRandom(lines.join('').length)
     ctx.fillStyle = board
     ctx.fillRect(0, 0, w, h)
@@ -320,7 +323,7 @@ export function bigSignTexture(lines, board = '#86685a') {
       ctx.lineWidth = size * 0.2
       ctx.strokeStyle = '#141414'
       ctx.strokeText(text, 0, 0)
-      ctx.fillStyle = '#ffffff'
+      ctx.fillStyle = ink
       ctx.fillText(text, 0, 0)
       ctx.restore()
     })
