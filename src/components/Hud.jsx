@@ -1,8 +1,19 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
-import { authState, isAvailable, login, showMenu, toggleCustomizer } from '../systems/bloxity.js'
 import { settings } from '../systems/settingsState.js'
-import { useAuth, useSettings } from '../systems/bloxityHooks.js'
-import { getMoney, subscribeMoney } from '../systems/poop.js'
+import { useSettings } from '../systems/bloxityHooks.js'
+import { login, subscribeAuth } from '../systems/bloxity.js'
+import InteractPrompt from './InteractPrompt.jsx'
+import ActionResult from './ActionResult.jsx'
+import FoodShop from './FoodShop.jsx'
+import SellPoop from './SellPoop.jsx'
+import SizeBoost from './SizeBoost.jsx'
+import SaveFoodFx from './SaveFoodFx.jsx'
+import FoodBar from './FoodBar.jsx'
+import Tutorial, { ChargeArrow } from './Tutorial.jsx'
+import { reportTutorialEvent } from '../systems/tutorial.js'
+import { FOODS } from '../systems/shop.js'
+import { consumeSelected } from '../systems/pantry.js'
+import { awardPoop, getSelectedPoopType, getMoney, subscribeMoney } from '../systems/poop.js'
 
 function FpsMeter() {
   const [fps, setFps] = useState(0)
@@ -25,94 +36,178 @@ function FpsMeter() {
   return <div className="hud-fps">{fps} FPS</div>
 }
 
-const LogoIcon = () => (
-  <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden>
-    <rect x="4" y="15" width="16" height="5" rx="2.5" fill="#fff" />
-    <rect x="6.5" y="10" width="11" height="5" rx="2.5" fill="#fff" />
-    <rect x="9" y="5" width="6" height="5" rx="2.5" fill="#fff" />
-  </svg>
-)
+const CHARGE_PERIOD = 1200 // ms for the bar to fill (then drain) once
+const NEEDLE_PERIOD = 1600 // ms for the needle to sweep across and back
+const REWARD_MAX = 100 // poop stored for a full-power (100%) charge bar
 
-const MenuIcon = () => (
-  <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden>
-    <path d="M4 6.5h16M4 12h16M4 17.5h16" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
-  </svg>
-)
+// Timing meter geometry, as % of the meter box (mirrors .hud-meter-zone / -sweet in index.css).
+const NEEDLE_MIN = 4
+const NEEDLE_MAX = 96
+const ZONE_L = 33
+const ZONE_R = 73
+const RED_L = 51.8
+const RED_R = 53.6
 
-const ChatIcon = () => (
-  <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden>
-    <path d="M5 4.5h14a1.5 1.5 0 0 1 1.5 1.5v9a1.5 1.5 0 0 1-1.5 1.5h-7l-4.5 3.5v-3.5H5A1.5 1.5 0 0 1 3.5 15V6A1.5 1.5 0 0 1 5 4.5Z" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinejoin="round" />
-    <path d="M7.5 9h9M7.5 12h6" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" />
-  </svg>
-)
+// Progress gained (0..1 of the bar) for a needle landing at `pos` (%): red is best, green scales with
+// closeness to the red, anywhere else is a miss.
+function hitGain(pos) {
+  if (pos >= RED_L && pos <= RED_R) return 0.4
+  if (pos < ZONE_L || pos > ZONE_R) return 0
+  const edge = pos < RED_L ? RED_L - ZONE_L : ZONE_R - RED_R
+  const dist = pos < RED_L ? RED_L - pos : pos - RED_R
+  return 0.1 + 0.2 * (1 - dist / edge)
+}
 
-const BackpackIcon = () => (
-  <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden>
-    <path d="M9 5.5V4a3 3 0 0 1 6 0v1.5" fill="none" stroke="#b9c3c6" strokeWidth="1.7" />
-    <rect x="5.5" y="5.5" width="13" height="15.5" rx="4" fill="none" stroke="#b9c3c6" strokeWidth="1.7" />
-    <rect x="8.5" y="13" width="7" height="5" rx="1.5" fill="none" stroke="#b9c3c6" strokeWidth="1.7" />
-    <path d="M8.5 10h7" stroke="#b9c3c6" strokeWidth="1.7" strokeLinecap="round" />
-  </svg>
-)
+// Vertical charge bar: ping-pongs 0..1 while mounted and reports the live value through valueRef.
+function ChargeBar({ valueRef }) {
+  const fill = useRef(null)
+  useEffect(() => {
+    let raf
+    const t0 = performance.now()
+    const tick = (now) => {
+      const p = (((now - t0) / CHARGE_PERIOD) % 2)
+      const v = p < 1 ? p : 2 - p
+      valueRef.current = v
+      if (fill.current) fill.current.style.transform = `scaleY(${v})`
+      raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [valueRef])
+  return (
+    <div className="hud-vbar" aria-hidden>
+      <div className="hud-vbar-fill" ref={fill} />
+    </div>
+  )
+}
+
+// Shown only to signed-out players (guests); hidden once signed in, and until
+// the first auth state arrives so it doesn't flash for a signed-in player.
+function LoginButton() {
+  const [signedOut, setSignedOut] = useState(false)
+  useEffect(() => subscribeAuth((s) => setSignedOut(s.ready && !s.user)), [])
+  if (!signedOut) return null
+  return (
+    <button type="button" className="hud-login" onClick={login}>
+      Bloxity Login
+    </button>
+  )
+}
 
 function useMoney() {
   return useSyncExternalStore(subscribeMoney, getMoney)
 }
 
-// DOM overlay laid out like the reference: a top-left button cluster (logo,
-// menu + chat pill, backpack), the tutorial banner floating on a dark cloud
+// DOM overlay laid out like the reference: the tutorial banner (Tutorial.jsx) floating on a dark cloud
 // at the top centre and the cash counter bottom-left. Everything is
 // pointer-events:none except the buttons, so taps reach the canvas.
 export default function Hud() {
-  useAuth()
   useSettings()
   const money = useMoney()
-  const [chatOpen, setChatOpen] = useState(false)
-  const [unread, setUnread] = useState(1)
-  const sdkOn = isAvailable()
-  const signedIn = !!authState.user
+  // 'idle' (both hidden) -> 'charging' (left button held: vertical bar) -> 'meter' (released: timing meter)
+  const [phase, setPhase] = useState('idle')
+  const [charge, setCharge] = useState(0) // bar fill (0..1) captured on release
+  const [progress, setProgress] = useState(0) // 0..1; reaching 1 pays out charge * REWARD_MAX
+  const live = useRef(0)
+  const needle = useRef(null)
+  const needlePos = useRef(0) // live needle position, % of the meter box
+  const st = useRef({ phase: 'idle', charge: 0, progress: 0 })
+  st.current.phase = phase
+  st.current.charge = charge
+  st.current.progress = progress
 
-  const toggleChat = () => {
-    setChatOpen((o) => !o)
-    setUnread(0)
-  }
-  const openBackpack = () => {
-    if (!sdkOn) return
-    if (signedIn) toggleCustomizer()
-    else login()
-  }
+  // Needle sweep, driven from JS so a click can read exactly where it is.
+  useEffect(() => {
+    if (phase !== 'meter') return
+    let raf
+    const t0 = performance.now()
+    const tick = (now) => {
+      const p = ((now - t0) / NEEDLE_PERIOD) % 2
+      const v = p < 1 ? p : 2 - p
+      needlePos.current = NEEDLE_MIN + (NEEDLE_MAX - NEEDLE_MIN) * v
+      if (needle.current) needle.current.style.left = `${needlePos.current}%`
+      raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [phase])
 
+  useEffect(() => {
+    if (phase === 'meter') reportTutorialEvent('hold')
+  }, [phase])
+
+  useEffect(() => {
+    const down = (e) => {
+      if (e.button !== 0 || e.target.closest('button, .shop-overlay')) return
+      const s = st.current
+      if (s.phase === 'idle') {
+        setPhase('charging')
+      } else if (s.phase === 'meter') {
+        // Land the needle: red/green fills the progress bar, a miss hides the meter.
+        const gain = hitGain(needlePos.current)
+        if (gain === 0) {
+          setPhase('idle')
+          return
+        }
+        const next = Math.min(1, s.progress + gain)
+        if (next >= 1) {
+          // A selected hotbar food is eaten and wins; otherwise a selected poop passes on its type.
+          const id = consumeSelected() ?? getSelectedPoopType()
+          awardPoop(Math.round(s.charge * REWARD_MAX), FOODS.find((f) => f.id === id))
+          setProgress(0)
+          setPhase('idle')
+        } else {
+          setProgress(next)
+        }
+      }
+    }
+    const up = (e) => {
+      if (e.button !== 0 || st.current.phase !== 'charging') return
+      setCharge(live.current)
+      setPhase('meter')
+    }
+    window.addEventListener('pointerdown', down)
+    window.addEventListener('pointerup', up)
+    window.addEventListener('pointercancel', up)
+    return () => {
+      window.removeEventListener('pointerdown', down)
+      window.removeEventListener('pointerup', up)
+      window.removeEventListener('pointercancel', up)
+    }
+  }, [])
   return (
     <div className="hud" style={{ '--hud-alpha': settings.background_transparency }}>
-      <div className="hud-topbar">
-        <button className="hud-btn hud-btn-round" aria-label="Home" onClick={showMenu}>
-          <LogoIcon />
-        </button>
-        <div className="hud-pill">
-          <button className="hud-btn" aria-label="Menu" onClick={showMenu}>
-            <MenuIcon />
-          </button>
-          <button className="hud-btn" aria-label="Chat" onClick={toggleChat}>
-            <ChatIcon />
-            {unread > 0 && <span className="hud-badge">{unread}</span>}
-          </button>
-        </div>
-        <button className="hud-btn hud-btn-round hud-btn-pack" aria-label="Backpack" onClick={openBackpack}>
-          <BackpackIcon />
-        </button>
-      </div>
+      {settings.show_fps && <FpsMeter />}
+      <LoginButton />
 
-      {chatOpen && (
-        <div className="hud-chat">
-          <b>[System]</b> Welcome to the island! Tap anywhere to poop 💩
+      <InteractPrompt />
+      <ActionResult />
+      <FoodShop />
+      <SellPoop />
+      <SizeBoost />
+      <SaveFoodFx />
+      <FoodBar />
+
+      <Tutorial phase={phase} />
+
+      {phase === 'meter' && (
+      <div className="hud-meter" data-charge={charge.toFixed(2)}>
+        <div className="hud-meter-box">
+          <div className="hud-meter-zone">
+            <div className="hud-meter-sweet" />
+          </div>
+          <div className="hud-meter-needle" ref={needle}>
+            <i className="hud-meter-poop" aria-hidden>💩</i>
+          </div>
         </div>
+        <div className="hud-meter-progress">
+          <div className="hud-meter-progress-fill" style={{ width: `${progress * 100}%` }} />
+        </div>
+      </div>
       )}
 
-      {settings.show_fps && <FpsMeter />}
-
-      <div className="hud-banner">
-        <span>Tutorial: Tap To Poop</span> <i aria-hidden>💩</i>
-      </div>
+      {phase === 'charging' && <ChargeBar valueRef={live} />}
+      {phase === 'charging' && <ChargeArrow />}
 
       <div className="hud-money" key={money}>
         ${money.toFixed(2)}

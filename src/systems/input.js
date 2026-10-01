@@ -12,6 +12,60 @@ export const inputState = {
   poop: false,
 }
 
+// Touch sessions have no keyboard or mouse: components/TouchControls.jsx drives
+// `inputState` through the setters below. `active` flips once — on the first
+// real touch, or at install when the primary pointer is coarse — and never
+// flips back for the session.
+export const touchState = { active: false }
+const touchModeSubs = new Set()
+
+export function subscribeTouchMode(cb) {
+  touchModeSubs.add(cb)
+  return () => touchModeSubs.delete(cb)
+}
+
+function enableTouchMode() {
+  if (touchState.active) return
+  touchState.active = true
+  document.documentElement.classList.add('touch-mode')
+  touchModeSubs.forEach((cb) => cb(true))
+}
+
+// Analog stick, magnitude 0..1 (playerMovement scales speed by it).
+export function setTouchMove(x, z) {
+  inputState.move.x = x
+  inputState.move.z = z
+}
+
+export function addTouchLook(dx, dy) {
+  inputState.look.dx += dx
+  inputState.look.dy += dy
+}
+
+export function addTouchZoom(dz) {
+  inputState.zoom += dz
+}
+
+export function pressTouchJump() {
+  inputState.jump = true // consumed + cleared next frame by playerMovement
+}
+
+export function pressTouchPoop() {
+  inputState.poop = true // consumed + cleared by GameLoop
+}
+
+// Hold-to-interact: the E button is held, not tapped (systems/interact.js).
+const INTERACT_KEY = 'KeyE'
+const touchInteractState = { down: false }
+
+export function pressTouchInteract() {
+  touchInteractState.down = true
+}
+
+export function releaseTouchInteract() {
+  touchInteractState.down = false
+}
+
 const TAP_MAX_MS = 350
 const TAP_MAX_PX = 10
 let tap = null // { id, x, y, t } of the pointer that might become a tap
@@ -55,9 +109,7 @@ function onPointerDown(e) {
 
 function onPointerUp(e) {
   if (tap && e.pointerId === tap.id) {
-    const quick = performance.now() - tap.t < TAP_MAX_MS
-    const still = Math.hypot(e.clientX - tap.x, e.clientY - tap.y) < TAP_MAX_PX
-    if (quick && still) inputState.poop = true
+    // Canvas taps no longer poop directly: the HUD charge bar + timing meter decide the reward.
     tap = null
   }
   if (e.pointerType === 'touch') return
@@ -71,6 +123,7 @@ function onPointerMove(e) {
 }
 
 function onWheel(e) {
+  if (e.target instanceof Element && e.target.closest('.shop-overlay')) return // scrolls the shop list instead
   inputState.zoom += e.deltaY
 }
 
@@ -78,10 +131,19 @@ function onContextMenu(e) {
   e.preventDefault() // right-drag is the orbit gesture
 }
 
+// Continuous "is the interact key physically held" signal (keyboard E or the
+// touch E button), polled once per frame by systems/interact.js.
+export function isInteractKeyDown() {
+  return held.has(INTERACT_KEY) || touchInteractState.down
+}
+
 function onBlur() {
   held.clear()
+  touchInteractState.down = false
   orbiting = false
   inputState.jump = false
+  inputState.move.x = 0
+  inputState.move.z = 0
   tap = null
   recomputeMove()
 }
@@ -97,6 +159,17 @@ export function install() {
   window.addEventListener('wheel', onWheel, { passive: true })
   window.addEventListener('contextmenu', onContextMenu)
   window.addEventListener('blur', onBlur)
+  window.addEventListener('touchstart', enableTouchMode, { passive: true })
+
+  // A coarse primary pointer means no mouse is coming: show the on-screen
+  // controls right away rather than waiting for the first touch.
+  if (
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(pointer: coarse)').matches &&
+    (navigator.maxTouchPoints || 0) > 0
+  ) {
+    enableTouchMode()
+  }
 }
 
 export function uninstall() {
@@ -111,4 +184,5 @@ export function uninstall() {
   window.removeEventListener('wheel', onWheel)
   window.removeEventListener('contextmenu', onContextMenu)
   window.removeEventListener('blur', onBlur)
+  window.removeEventListener('touchstart', enableTouchMode)
 }

@@ -7,42 +7,23 @@
   font-family: 'Lilita One', 'Arial Black', system-ui, sans-serif;
 }
 * { box-sizing: border-box; }
-html, body, #root { margin: 0; height: 100%; overflow: hidden; background: #c9e8ec; user-select: none; -webkit-tap-highlight-color: transparent; }
+html, body, #root { margin: 0; height: 100%; overflow: hidden; background: #c9e8ec; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; overscroll-behavior: none; }
 canvas { display: block; touch-action: none; }
 
-.hud { position: fixed; inset: 0; pointer-events: none; color: var(--ink); }
+.hud { position: fixed; inset: 0; z-index: 8; pointer-events: none; color: var(--ink); }
 .hud > * { position: absolute; }
 .hud button { pointer-events: auto; }
-
-.hud-topbar { top: 15px; left: 20px; display: flex; gap: 15px; align-items: center; }
-.hud-btn {
-  position: relative; display: grid; place-items: center; width: 55px; height: 55px;
-  padding: 0; border: 0; background: transparent; cursor: pointer; color: #fff;
+.hud-login {
+  top: 16px; left: 16px; padding: 8px 20px; font: inherit; font-size: 18px; font-weight: 700;
+  border: 0; border-radius: 12px; background: #3b82f6; color: #fff; cursor: pointer;
 }
-.hud-btn-round { border-radius: 50%; background: rgba(18, 20, 22, var(--hud-alpha, 0.9)); }
-.hud-btn-pack { background: rgba(38, 72, 82, var(--hud-alpha, 0.9)); }
-.hud-pill { display: flex; height: 55px; padding: 0 6px; border-radius: 999px; background: rgba(18, 20, 22, var(--hud-alpha, 0.9)); pointer-events: auto; }
-.hud-pill .hud-btn { width: 54px; }
-.hud-btn:active { transform: scale(0.94); }
-.hud-badge {
-  position: absolute; top: 7px; right: 6px; min-width: 19px; height: 19px; padding: 0 5px;
-  border-radius: 99px; background: #335fff; color: #fff; border: 2px solid #fff;
-  font: 700 11px/15px system-ui, sans-serif; text-align: center;
-}
-
-.hud-chat {
-  top: 82px; left: 20px; max-width: min(340px, calc(100vw - 40px)); padding: 10px 14px;
-  border-radius: 10px; background: rgba(18, 20, 22, 0.6); color: #fff;
-  font: 600 15px/1.35 'Montserrat', system-ui, sans-serif; text-shadow: 0 1px 2px #000;
-}
-.hud-chat b { color: #ffd34d; }
 
 .hud-fps { top: 82px; right: 20px; font-size: 13px; padding: 2px 10px; border-radius: 8px; background: rgba(255, 255, 255, 0.8); }
 
 /* Tutorial text floating on a dark, blurred storm-cloud blob. */
 .hud-banner {
   top: 21%; left: 50%; transform: translate(-50%, -50%); white-space: nowrap;
-  display: flex; align-items: center; gap: 10px;
+  display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 4px 10px;
   font: 800 clamp(20px, 2.6vw, 36px) 'Montserrat', 'Arial Black', sans-serif; color: #fff;
   letter-spacing: -0.3px;
   -webkit-text-stroke: 1.5px #1a1a1a; paint-order: stroke fill;
@@ -54,7 +35,14 @@ canvas { display: block; touch-action: none; }
   border-radius: 50%; filter: blur(22px);
   background: radial-gradient(closest-side, rgba(14, 22, 30, 0.88) 0%, rgba(20, 34, 44, 0.7) 45%, rgba(40, 70, 85, 0.25) 75%, transparent 100%);
 }
+.hud-banner.is-long { width: min(760px, 92vw); text-align: center; }
+.hud-banner.is-long > span { white-space: normal; font-size: clamp(16px, 2vw, 26px); }
 .hud-banner i { font-style: normal; -webkit-text-stroke: 0; text-shadow: none; }
+.hud-banner small {
+  font: 700 clamp(12px, 1.3vw, 17px) 'Montserrat', 'Arial', sans-serif; letter-spacing: 0;
+  -webkit-text-stroke: 0; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+.hud-banner-hint { flex-basis: 100%; text-align: center; white-space: normal; max-width: min(560px, 90vw); margin: 0 auto; }
 
 /* Cash counter: chunky slanted cartoon numerals with a black outline. */
 .hud-money {
@@ -87,3 +75,374 @@ canvas { display: block; touch-action: none; }
 .loading-swirl i:nth-child(2) { width: 62px; }
 .loading-swirl i:nth-child(3) { width: 38px; }
 @keyframes wobble { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg) translateY(-4px); } }
+
+/* Touch controls (components/TouchControls.jsx); <html> gets .touch-mode on a touch session. */
+.touch-controls { position: fixed; inset: 0; pointer-events: none; touch-action: none; z-index: 5; }
+.touch-look { position: fixed; top: 0; right: 0; bottom: 0; left: 46%; pointer-events: auto; touch-action: none; }
+.touch-stick-zone { position: fixed; left: 0; bottom: 0; width: 45%; height: 58%; pointer-events: auto; touch-action: none; }
+.touch-stick-base, .touch-stick-knob { position: fixed; border-radius: 50%; z-index: 6; pointer-events: none; }
+.touch-stick-base { border: 2px solid rgba(255, 255, 255, 0.55); background: rgba(255, 255, 255, 0.12); }
+.touch-stick-knob { width: 52px; height: 52px; border: 2px solid rgba(255, 255, 255, 0.85); background: rgba(255, 255, 255, 0.4); }
+.touch-cluster {
+  position: fixed; z-index: 7; display: flex; align-items: flex-end; gap: 12px;
+  right: calc(env(safe-area-inset-right, 0px) + 18px); bottom: calc(env(safe-area-inset-bottom, 0px) + 22px);
+}
+.touch-btn {
+  pointer-events: auto; touch-action: none; display: grid; place-items: center; padding: 0;
+  border-radius: 50%; border: 3px solid #1a1a1a; color: #fff; cursor: pointer;
+  font: 400 15px/1 'Luckiest Guy', 'Lilita One', 'Arial Black', sans-serif; letter-spacing: 0.5px;
+  -webkit-text-stroke: 1px #1a1a1a; paint-order: stroke fill;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.4); transition: transform 0.06s;
+}
+.touch-btn.is-down { transform: scale(0.92); }
+.touch-btn-small { width: clamp(56px, 12vmin, 72px); height: clamp(56px, 12vmin, 72px); background: rgba(38, 72, 82, 0.85); }
+.touch-btn-big { width: clamp(76px, 18vmin, 104px); height: clamp(76px, 18vmin, 104px); font-size: clamp(34px, 8vmin, 48px); background: #a5683a; -webkit-text-stroke: 0; }
+
+/* HUD tweaks for phones: safe-area insets and a tighter layout on short screens. */
+.touch-mode .hud-fps { top: calc(env(safe-area-inset-top, 0px) + 10px); right: calc(env(safe-area-inset-right, 0px) + 12px); }
+.touch-mode .hud-money { left: calc(env(safe-area-inset-left, 0px) + 18px); bottom: calc(env(safe-area-inset-bottom, 0px) + 14px); }
+@media (max-height: 520px) {
+  .hud-banner { top: 16%; font-size: clamp(16px, 4vh, 24px); }
+  .hud-money { font-size: clamp(26px, 8vh, 36px); }
+}
+@media (max-width: 600px) {
+  .hud-banner { white-space: normal; text-align: center; width: 80vw; justify-content: center; }
+}
+
+/* Portrait gate for touch sessions (components/RotatePrompt.jsx). */
+.rotate-prompt {
+  position: fixed; inset: 0; z-index: 20; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 16px; padding: 32px; text-align: center; touch-action: none;
+  color: var(--cream); background: radial-gradient(circle at 50% 40%, #a5683a, var(--brown) 70%);
+}
+.rotate-prompt h2 { margin: 0; font-size: 28px; text-shadow: 0 3px 0 #3b2314; }
+.rotate-prompt p { margin: 0; max-width: 280px; font: 600 15px/1.5 'Montserrat', system-ui, sans-serif; opacity: 0.9; }
+@keyframes rotate-hint { 0%, 55% { transform: rotate(0); } 80%, 100% { transform: rotate(-90deg); } }
+
+/* Bottom-centre timing meter: sweet-spot zone, sweeping needle, progress bar */
+.hud-meter {
+  left: 50%; transform: translateX(-50%) scale(0.85); transform-origin: bottom center;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 60px);
+  width: min(700px, 92vw);
+}
+.hud-meter-box {
+  position: relative; height: 56px; padding: 8px; box-sizing: border-box;
+  background: #000; border-radius: 8px;
+}
+.hud-meter-box::before {
+  content: ''; position: absolute; inset: 5px; border: 1px solid #aaa; border-radius: 4px;
+}
+.hud-meter-zone { position: absolute; left: 33%; width: 40%; top: 14px; bottom: 14px; background: linear-gradient(90deg, #22dd33, #168a22 50%, #22dd33); }
+.hud-meter-sweet { position: absolute; left: 47%; width: 4.5%; top: 0; bottom: 0; background: #f00; }
+.hud-meter-needle {
+  position: absolute; top: -14px; bottom: -14px; left: 0; width: 14px; margin-left: -7px;
+  background: #fff; border: 2px solid #000; border-radius: 8px; box-sizing: border-box;
+  left: 4%;
+}
+.hud-meter-progress {
+  margin: 14px 4px 0; height: 20px; border-radius: 8px; background: #4a4a4a; border: 3px solid #000; box-sizing: border-box;
+}
+/* Phones: shrink the meter with the viewport and keep it clear of the touch buttons / money counter. */
+.touch-mode .hud-meter { width: min(700px, 50vw); bottom: calc(env(safe-area-inset-bottom, 0px) + 48px); }
+@media (max-height: 520px) {
+  .hud-meter { transform: translateX(-50%) scale(0.7); bottom: calc(env(safe-area-inset-bottom, 0px) + 42px); }
+  .hud-meter-poop { font-size: 36px; }
+}
+@media (max-width: 600px) {
+  .hud-meter { width: 94vw; transform: translateX(-50%) scale(0.8); }
+}
+.hud-meter-poop {
+  position: absolute; left: 50%; bottom: 100%; transform: translateX(-50%); margin-bottom: 4px;
+  font-style: normal; font-size: 44px; line-height: 1; opacity: 0.55;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.4));
+}
+
+/* Vertical progress bar: fills and drains in a loop */
+.hud-vbar {
+  right: calc(env(safe-area-inset-right, 0px) + 24px); top: 50%; transform: translateY(-50%);
+  width: 28px; height: clamp(120px, 34vh, 260px); box-sizing: border-box;
+  background: #4a4a4a; border: 3px solid #000; border-radius: 10px; overflow: hidden;
+}
+.hud-vbar-fill {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 100%; transform-origin: bottom;
+  background: linear-gradient(0deg, #168a22, #22dd33);
+}
+/* Tutorial: red arrow pointing at the charge bar (components/Tutorial.jsx ChargeArrow). */
+.tutorial-arrow {
+  right: calc(env(safe-area-inset-right, 0px) + 66px); top: 50%; width: 64px; height: 40px; margin-top: -20px;
+  fill: #e5252a; stroke: #fff; stroke-width: 3; stroke-linejoin: round;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.6)); animation: arrow-nudge 0.6s ease-in-out infinite alternate;
+}
+@keyframes arrow-nudge { to { transform: translateX(10px); } }
+/* Tutorial sell step: bobbing red arrows over the newest poop card (down) and inside Sell Selected (left). */
+.guide-arrow {
+  position: absolute; width: 44px; height: 28px; pointer-events: none; z-index: 2;
+  fill: #e5252a; stroke: #fff; stroke-width: 3; stroke-linejoin: round; overflow: visible;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.6));
+}
+.guide-arrow-down { left: 50%; top: -38px; margin-left: -22px; animation: guide-bob-down 0.6s ease-in-out infinite alternate; }
+.guide-arrow-right { right: 100%; top: 50%; margin: -14px 8px 0 0; animation: guide-bob-right 0.6s ease-in-out infinite alternate; }
+.guide-arrow-left { right: 16px; top: 50%; margin-top: -14px; animation: guide-bob-left 0.6s ease-in-out infinite alternate; }
+@keyframes guide-bob-down { to { transform: translateY(8px); } }
+@keyframes guide-bob-right { to { transform: translateX(8px); } }
+@keyframes guide-bob-left { to { transform: translateX(-8px); } }
+.hud-meter-progress { overflow: hidden; }
+.hud-meter-progress-fill { height: 100%; background: linear-gradient(90deg, #22dd33, #168a22); transition: width 0.15s ease-out; }
+
+/* "Press E" prompt with hold-to-confirm ring (components/InteractPrompt.jsx). */
+.interact-prompt {
+  left: 50%; top: 70%; transform: translate(-50%, -50%);
+  display: flex; align-items: center; gap: 12px; padding: 8px 16px; border-radius: 16px;
+  background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.interact-prompt.is-held { transform: translate(-50%, -50%) scale(1.5); background: transparent; padding: 0; backdrop-filter: none; -webkit-backdrop-filter: none; }
+.interact-key {
+  position: relative; display: grid; place-items: center; flex: none; width: 36px; height: 36px;
+  border-radius: 50%; transition: background-color 0.3s;
+}
+.interact-prompt.is-held .interact-key { background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+.interact-key svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); fill: none; stroke-width: 2.5; }
+.interact-ring-bg { stroke: rgba(255, 255, 255, 0.25); }
+.interact-ring { stroke: #fff; stroke-linecap: round; transition: stroke-dashoffset 0.12s linear; }
+.interact-key b {
+  position: relative; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 5px;
+  border: 2px solid rgba(255, 255, 255, 0.7); background: rgba(255, 255, 255, 0.1);
+  font: 700 12px/1 'Montserrat', system-ui, sans-serif; color: #fff;
+}
+.interact-label {
+  font: 400 clamp(16px, 2vw, 20px)/1 'Lilita One', 'Arial Black', sans-serif; letter-spacing: 0.5px; color: #fff;
+  -webkit-text-stroke: 1.5px #111; paint-order: stroke fill;
+}
+.interact-prompt.is-held .interact-label { display: none; }
+.touch-mode .interact-prompt { top: 62%; }
+
+/* Result popup for a completed/blocked hold-E (components/ActionResult.jsx). */
+.action-result { top: 64px; left: 50%; transform: translateX(-50%); z-index: 2; }
+.action-result-bar {
+  display: flex; align-items: center; justify-content: center; width: min(32rem, 92vw); height: 3.5rem;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0) 0%, #000 50%, rgba(0, 0, 0, 0) 100%);
+  animation: action-result-pop 2.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+.action-result-bar span {
+  font: 400 clamp(22px, 3vw, 30px)/1 'Lilita One', 'Arial Black', sans-serif;
+  -webkit-text-stroke: 1.5px #000; paint-order: stroke fill;
+}
+@keyframes action-result-pop {
+  0% { opacity: 0; transform: scale(0.4); }
+  8% { opacity: 1; transform: scale(1.12); }
+  14% { opacity: 1; transform: scale(1); }
+  80% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.5); }
+}
+
+/* Hold-to-interact E button (touch only; shown while a zone is in range). */
+.touch-btn-e { width: clamp(56px, 12vmin, 72px); height: clamp(56px, 12vmin, 72px); font-size: 26px; background: #2f8f4e; }
+
+/* Buy Food shop modal (components/FoodShop.jsx). */
+.shop-overlay {
+  position: fixed; inset: 0; z-index: 9; pointer-events: auto;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+  padding: 16px; background: rgba(0, 0, 0, 0.12);
+  font-family: 'Lilita One', 'Luckiest Guy', 'Arial Black', sans-serif;
+  --poop-a: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='90' viewBox='0 0 120 90'%3E%3Cg fill='%23000' fill-opacity='.16' transform='rotate(-8 60 45)'%3E%3Cellipse cx='60' cy='70' rx='34' ry='11'/%3E%3Cellipse cx='60' cy='52' rx='25' ry='10'/%3E%3Cellipse cx='60' cy='36' rx='16' ry='8'/%3E%3Cpath d='M52 31 Q62 8 70 28Z'/%3E%3C/g%3E%3C/svg%3E");
+}
+.shop-stack { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 10px; transform: scale(0.75); } /* whole UI at 0.75x */
+.shop-warning {
+  font-size: clamp(16px, 2.6vw, 28px); text-align: center; text-transform: uppercase; letter-spacing: 0.5px;
+  color: #ffe600; -webkit-text-stroke: 4px #3a2a00; paint-order: stroke fill;
+  text-shadow: 0 3px 0 #3a2a00;
+}
+.shop-panel {
+  position: relative; width: min(750px, 100%); height: min(600px, 80vh);
+  display: flex; flex-direction: column; overflow: hidden;
+  border: 5px solid #3a1706; border-radius: 28px 28px 22px 22px;
+  background: #7b3a12 var(--poop-a); background-size: 120px 90px;
+  box-shadow: 0 8px 0 rgba(0, 0, 0, 0.25), 0 14px 30px rgba(0, 0, 0, 0.4);
+}
+.shop-head {
+  flex: none; padding: 22px 28px 20px; font-size: clamp(24px, 4vw, 36px); color: #fff;
+  background: #fff200 var(--poop-a); background-size: 120px 90px;
+  border-bottom: 5px solid #3a1706;
+  -webkit-text-stroke: 5px #000; paint-order: stroke fill; text-shadow: 0 3px 0 #000;
+}
+.shop-close {
+  position: absolute; top: -2px; right: -2px; z-index: 2; width: 58px; height: 52px; padding: 0;
+  display: grid; place-items: center; cursor: pointer;
+  background: linear-gradient(#ee3030, #cf1c1c); border: 3px solid #3a1706; border-radius: 14px;
+  box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.35), 0 3px 0 rgba(0, 0, 0, 0.3);
+}
+.shop-close svg { width: 28px; height: 28px; fill: none; stroke: #fff; stroke-width: 4.5; stroke-linecap: round; }
+.shop-close:active { transform: translateY(2px); }
+.shop-list {
+  flex: 1; min-height: 0; overflow-y: auto; padding: 14px 16px 18px; display: flex; flex-direction: column; gap: 14px;
+  scrollbar-width: thin; scrollbar-color: #e9d9c8 transparent;
+}
+.shop-item {
+  flex: none; position: relative; display: flex; align-items: stretch; gap: 22px; width: 100%; padding: 14px 20px 14px 22px; text-align: left; cursor: pointer;
+  font: inherit; color: #fff; background: rgba(60, 24, 8, 0.82); border: 3px solid #2a1004; border-radius: 6px;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.04);
+}
+.shop-item:hover:not(:disabled) { background: rgba(80, 34, 12, 0.9); }
+.shop-item:active:not(:disabled) { transform: scale(0.99); }
+.shop-item:disabled { cursor: default; }
+.shop-item:disabled .shop-icon { filter: grayscale(1) brightness(0.55); }
+.shop-icon {
+  flex: none; width: 128px; height: 128px; display: grid; place-items: center; font-size: 72px;
+  background: #8a5a3a; border: 4px solid #2a1004; border-radius: 4px; box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.35);
+}
+.shop-info { flex: 1; display: flex; flex-direction: column; justify-content: space-between; padding: 2px 0; }
+.shop-info > span, .shop-effect > span { -webkit-text-stroke: 3px #000; paint-order: stroke fill; }
+.shop-name { font-size: 32px; line-height: 1; text-shadow: 0 2px 0 #000; }
+.shop-stock { font-size: 24px; line-height: 1; color: #b4b4b4; }
+.shop-was { color: #ff3b30; text-decoration: line-through; text-decoration-thickness: 4px; margin-right: 14px; }
+.shop-discount { font-size: 24px; color: #ffe600; }
+.shop-price { font-size: 38px; line-height: 1; color: #00ff1a; text-shadow: 0 2px 0 #000; }
+.shop-effect { flex: none; display: flex; flex-direction: column; align-items: flex-end; text-align: right; font-size: 17px; line-height: 1.15; }
+.shop-effect > span { -webkit-text-stroke-width: 2px; }
+.shop-mut { margin-top: auto; color: #8fcdff; font-size: 20px; -webkit-text-stroke-width: 2.5px !important; }
+.shop-rarity {
+  position: relative; margin-top: 4px; min-width: 182px; padding: 4px 14px; text-align: center; font-size: 28px; color: #fff;
+  background: #8c8c8c; border: 3px solid #5d5d5d; border-radius: 6px;
+  box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.25), inset 0 -3px 0 rgba(0, 0, 0, 0.2);
+  -webkit-text-stroke: 3px #000;
+}
+@media (max-width: 640px), (max-height: 520px) {
+  .shop-icon { width: 84px; height: 84px; font-size: 46px; }
+  .shop-item { gap: 12px; padding: 10px; }
+  .shop-name { font-size: 22px; } .shop-stock { font-size: 16px; } .shop-price { font-size: 26px; }
+  .shop-effect { font-size: 12px; } .shop-mut { font-size: 14px; } .shop-rarity { min-width: 110px; font-size: 18px; }
+}
+.shop-nostock { color: #ff3b30; font-size: 30px; }
+.shop-mut-aura { color: #ff9be8; }
+.shop-mut-size { color: #ffb55c; }
+.shop-rarity-uncommon { background: #4ec04a; border-color: #2c7d2a; }
+.shop-rarity-rare { background: #3d8fe0; border-color: #1f5a9e; }
+.shop-rarity-legendary { background: #f0a020; border-color: #a86a08; }
+.shop-rarity-prismatic { background: linear-gradient(90deg, #ff5f6d, #ffd35c, #5cf08a, #5cc8ff, #c35cff); border-color: #6b3d9a; }
+
+/* Daily Size Boost modal (components/SizeBoost.jsx); reuses the shop panel chrome. */
+.boost-panel { width: min(720px, 100%); height: auto; }
+.boost-panel .shop-head, .boost-panel .boost-title, .boost-panel .boost-warn, .boost-panel .boost-big, .boost-panel .boost-side-val,
+.boost-panel .boost-day-m, .boost-panel .boost-claim, .boost-panel .boost-skip, .boost-panel .boost-label { paint-order: stroke fill; }
+.boost-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-right: 70px; }
+.boost-head > span { -webkit-text-stroke: 5px #000; paint-order: stroke fill; }
+.boost-skip {
+  flex: none; padding: 6px 16px; cursor: pointer; font: inherit; font-size: clamp(14px, 2.4vw, 22px); color: #fff;
+  background: linear-gradient(#3da5ee, #1f7fd0); border: 3px solid #0f3f70; border-radius: 10px;
+  -webkit-text-stroke: 3px #0a2a4d; text-shadow: 0 2px 0 #0a2a4d; box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.35);
+}
+.boost-skip:active:not(:disabled) { transform: translateY(2px); }
+.boost-skip:disabled { cursor: default; filter: grayscale(1) brightness(0.6); }
+.boost-body { padding: 14px 18px 18px; display: flex; flex-direction: column; gap: 14px; color: #fff; }
+.boost-warn, .boost-title {
+  text-align: center; text-transform: uppercase; font-size: clamp(16px, 3vw, 28px);
+  -webkit-text-stroke: 4px #000; text-shadow: 0 3px 0 #000;
+}
+.boost-title { text-align: left; font-size: clamp(16px, 2.6vw, 24px); -webkit-text-stroke-width: 3px; }
+.boost-today {
+  display: flex; align-items: center; gap: 18px; padding: 14px 20px;
+  background: rgba(60, 24, 8, 0.85); border: 4px solid #2a1004; border-radius: 22px;
+}
+.boost-today-icon { font-style: normal; font-size: clamp(40px, 8vw, 64px); line-height: 1; }
+.boost-today-main, .boost-today-side { display: flex; flex-direction: column; gap: 4px; }
+.boost-today-main { flex: 1; }
+.boost-today-side { align-items: flex-end; }
+.boost-label { font-size: clamp(11px, 1.8vw, 16px); text-transform: uppercase; color: #ddd; -webkit-text-stroke: 2px #000; }
+.boost-big { font-size: clamp(20px, 4vw, 32px); text-transform: uppercase; color: #ffe600; -webkit-text-stroke: 4px #000; }
+.boost-side-val { font-size: clamp(18px, 3.4vw, 28px); text-transform: uppercase; -webkit-text-stroke: 4px #000; }
+.boost-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+.boost-day {
+  position: relative; aspect-ratio: 1 / 1.05; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  background: rgba(60, 24, 8, 0.85); border: 3px solid #2a1004; border-radius: 12px;
+}
+.boost-day-n { font-size: clamp(9px, 1.6vw, 14px); color: #c8c8c8; text-transform: uppercase; }
+.boost-day-m { font-size: clamp(16px, 3.2vw, 26px); color: #ffe600; -webkit-text-stroke: 3px #000; }
+.boost-day-done { background: rgba(20, 8, 2, 0.9); }
+.boost-day-done .boost-day-m { opacity: 0.35; }
+.boost-check { position: absolute; width: 46%; fill: none; stroke: #2fd24a; stroke-width: 4.5; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 2px 0 #000); }
+.boost-note { text-align: center; text-transform: uppercase; font-size: clamp(11px, 2vw, 18px); color: #ffe600; -webkit-text-stroke: 2px #3a2a00; paint-order: stroke fill; }
+.boost-claim {
+  position: relative; align-self: center; min-width: 40%; padding: 8px 40px; cursor: pointer; font: inherit; font-size: clamp(22px, 4vw, 34px); text-transform: uppercase; color: #fff;
+  background: linear-gradient(#3fd157, #1f9a35); border: 4px solid #0f5a1c; border-radius: 16px;
+  -webkit-text-stroke: 4px #0a3d12; text-shadow: 0 3px 0 #0a3d12; box-shadow: inset 0 4px 0 rgba(255, 255, 255, 0.35), 0 4px 0 rgba(0, 0, 0, 0.3);
+}
+.boost-claim:active:not(:disabled) { transform: translateY(2px); }
+.boost-claim:disabled { cursor: default; background: linear-gradient(#a8801c, #7a5a10); border-color: #4a3606; opacity: 0.8; -webkit-text-stroke-color: #3a2a00; text-shadow: 0 3px 0 #3a2a00; }
+
+/* Bought-food hotbar (components/FoodBar.jsx). */
+.foodbar {
+  z-index: 10; /* above the shop/sell overlays so poop can still be picked while selling */
+  left: 50%; transform: translateX(-50%); bottom: calc(env(safe-area-inset-bottom, 0px) + 18px);
+  display: flex; gap: 8px; max-width: 92vw; font-family: 'Montserrat', 'Arial Black', sans-serif;
+}
+.foodbar-card {
+  position: relative; flex: none; width: 92px; height: 82px; padding: 6px 8px; text-align: left; cursor: pointer;
+  display: flex; flex-direction: column; justify-content: space-between; color: #fff; font: inherit; font-weight: 600;
+  background: rgba(20, 24, 20, 0.62); border: 2px solid rgba(255, 255, 255, 0.85); border-radius: 12px;
+  backdrop-filter: blur(3px);
+}
+.foodbar-card.is-selected { border-color: #ffd35c; background: rgba(60, 50, 10, 0.75); box-shadow: 0 0 0 2px #ffd35c; transform: translateY(-6px); }
+.foodbar-poop { border-color: var(--poop); background: color-mix(in srgb, var(--poop) 35%, rgba(20, 24, 20, 0.7)); }
+.foodbar-poop .foodbar-name { font-size: 15px; }
+.foodbar-count { font-size: 17px; line-height: 1; }
+.foodbar-icon { position: absolute; right: 8px; top: 8px; font-size: 30px; line-height: 1; }
+.foodbar-name { font-size: 18px; line-height: 1.05; }
+.touch-mode .foodbar { bottom: calc(env(safe-area-inset-bottom, 0px) + 86px); }
+
+/* Save Food Effects modal (components/SaveFoodFx.jsx); reuses the shop panel chrome. */
+.fx-panel { width: min(720px, 100%); height: auto; }
+.fx-panel .shop-head, .fx-heading, .fx-status, .fx-empty, .fx-note, .fx-save, .fx-tile-name, .fx-tile-count { paint-order: stroke fill; }
+.fx-head { display: flex; flex-direction: column; gap: 2px; padding: 14px 80px 12px 20px; }
+.fx-title { font-size: clamp(26px, 5vw, 44px); line-height: 1; -webkit-text-stroke: 6px #000; paint-order: stroke fill; }
+.fx-sub { font-size: clamp(13px, 2.4vw, 22px); -webkit-text-stroke: 3px #000; paint-order: stroke fill; }
+.fx-body { padding: 14px 16px 18px; display: flex; flex-direction: column; gap: 14px; color: #fff; }
+.fx-section {
+  display: flex; flex-direction: column; gap: 12px; padding: 14px 18px 16px;
+  background: rgba(50, 20, 8, 0.88); border: 4px solid #2a1004; border-radius: 22px;
+}
+.fx-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.fx-heading { position: relative; padding-left: 16px; font-size: clamp(18px, 3.4vw, 30px); text-transform: uppercase; -webkit-text-stroke: 4px #000; }
+.fx-heading::before { content: ''; position: absolute; left: 0; top: 4%; bottom: 4%; width: 8px; border-radius: 4px; background: currentColor; }
+.fx-status { font-size: clamp(12px, 2.2vw, 20px); text-align: right; -webkit-text-stroke: 3px #000; }
+.fx-green { color: #6dff7a; }
+.fx-gold { color: #ffcf4a; }
+.fx-empty { padding: 14px 0 18px; text-align: center; font-size: clamp(22px, 4.6vw, 40px); color: #d9c3ae; -webkit-text-stroke: 5px #000; }
+.fx-empty-sm { padding: 6px 0; font-size: clamp(14px, 2.6vw, 22px); -webkit-text-stroke-width: 3px; }
+.fx-tiles { display: flex; flex-wrap: wrap; gap: 10px; }
+.fx-tile {
+  position: relative; width: clamp(64px, 14vw, 128px); aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: #6e432a; border: 4px solid #b07a4a; border-radius: 12px; box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.3);
+}
+.fx-tile-icon { font-size: clamp(30px, 7vw, 62px); line-height: 1; }
+.fx-tile-name { font-size: clamp(10px, 1.8vw, 15px); -webkit-text-stroke: 3px #000; }
+.fx-tile-count { position: absolute; top: 2px; right: 6px; font-size: clamp(11px, 2vw, 16px); color: #ffe600; -webkit-text-stroke: 3px #000; }
+.fx-note { text-align: center; text-transform: uppercase; font-size: clamp(11px, 2.2vw, 20px); color: #ffe27a; -webkit-text-stroke: 3px #3a2a00; }
+.fx-save {
+  align-self: center; padding: 8px 40px; cursor: pointer; font: inherit; font-size: clamp(22px, 4.4vw, 38px); text-transform: uppercase; color: #fff;
+  background: linear-gradient(#ffe03a, #ffcc1a); border: 5px solid #3a1706; border-radius: 20px;
+  -webkit-text-stroke: 4px #000; text-shadow: 0 3px 0 #000; box-shadow: inset 0 4px 0 rgba(255, 255, 255, 0.45), 0 4px 0 rgba(0, 0, 0, 0.3);
+}
+.fx-save i { font-style: normal; margin: 0 8px; }
+.fx-save:active:not(:disabled) { transform: translateY(2px); }
+.fx-save:disabled { cursor: default; filter: grayscale(1) brightness(0.6); }
+.fx-tile:hover { border-color: #ffcf4a; z-index: 3; }
+.fx-tip {
+  display: none; position: absolute; z-index: 4; top: 50%; left: calc(100% + 12px); transform: translateY(-50%); width: 300px; padding: 14px 18px 12px;
+  flex-direction: column; gap: 4px; text-align: left; pointer-events: none; cursor: default;
+  background: #2f1b12; border: 4px solid #ffcf4a; border-radius: 22px; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+}
+.fx-tile:hover .fx-tip { display: flex; }
+.fx-tile:nth-child(n+4) .fx-tip { left: auto; right: calc(100% + 12px); }
+.fx-tip > *, .fx-tip-title > * { -webkit-text-stroke: 3px #000; paint-order: stroke fill; }
+.fx-tip-head { display: flex; align-items: center; gap: 14px; }
+.fx-tip-icon { font-size: 52px; line-height: 1; }
+.fx-tip-title { display: flex; flex-direction: column; gap: 2px; }
+.fx-tip-effect { font-size: 30px; line-height: 1; color: #fff; }
+.fx-tip-type { font-size: 16px; text-transform: uppercase; color: #8fcdff; }
+.fx-tip-aura { color: #ff9be8; }
+.fx-tip-size { color: #ffb55c; }
+.fx-tip-food { margin-top: 6px; font-size: 18px; color: #d9c3ae; }
+.fx-tip-line { font-size: 22px; line-height: 1.1; text-transform: none; color: #fff; }
+.fx-tip-line:first-of-type { text-transform: uppercase; }
+.fx-tip-note { margin-top: 8px; padding-top: 8px; font-size: 16px; color: #ffcf4a; border-top: 2px solid #7a5a3a; -webkit-text-stroke-width: 2px !important; }

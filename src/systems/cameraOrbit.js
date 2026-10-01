@@ -9,7 +9,7 @@ const START_PITCH = 0.5 // radians above the horizon
 const state = {
   yaw: 0, // radians; 0 puts the camera on +Z looking toward -Z
   pitch: START_PITCH,
-  distance: 20,
+  distance: 6,
 }
 
 const MIN_PITCH = -0.1

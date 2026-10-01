@@ -3,13 +3,13 @@
 // 20-sided grass island with a swirl pad in the middle.
 //
 //                 bare tree + bush (N rim)
-//            [red stall] [potty] [blue stall]
-//                     $$ cash pile           brown blocks (NE rim)
+//            [buy stall] [potty] [sell stall]
+//                                            brown blocks (NE rim)
 //   board+NPC                                  [EAST CLIFF] fallen column
 //   [WEST CLIFF]          ( swirl pad )         short pillar, rocks
 //   column, bush                                 (chained jar, SE)
-//         board+NPC
-//                 bare tree + bush (S rim)
+//         board+NPC                    [boost stall] boost sign
+//                 bare tree + bush (S rim)     tree + bush
 export const GROUND_Y = 0
 
 export const ISLAND = {
@@ -45,21 +45,30 @@ export const BLOCKS = [-35, -42, -49, -56].map((deg, i) => ({
 }))
 
 export const STALLS = [
-  // red/white food stand: green tag, long-haired ginger shopkeeper in navy
+  // BUY stall (Increase Poop Value): red/white food stand: green tag, long-haired ginger shopkeeper in navy
   { x: -7.1, z: -14, stripe: '#e8323a', vendor: 'BUY FOOD', tag: '#7ae35a', look: 'ginger' },
-  { x: 4.9, z: -13.7, stripe: '#3d8fe0', vendor: 'SELL POOP' }, // blue/white, plank fence + vendor
+  { x: 4.9, z: -13.7, stripe: '#3d8fe0', vendor: 'SELL POOP' }, // SELL stall (Make Money): blue/white, plank fence + vendor
+  // DAILY SIZE BOOST stall: yellow/white stand, south-east of the pad: shopkeeper in a peaked cap
+  { x: 13, z: 11.5, stripe: '#f2c81c', vendor: 'SIZE BOOST', tag: '#f5d63a', look: 'cap' },
+  // SAVE FOOD EFFECT stall: teal/white stand, beside the Daily Reward NPC
+  { x: -10.5, z: 9.5, stripe: '#25b89a', vendor: '24 HOURS ONLY', tag: '#3fd6b8', look: 'ginger' },
 ]
-// Big "INCREASE POOP VALUE" board beside the Red Stall, on its west side.
+// Big "INCREASE POOP VALUE" board beside the Buy Stall, on its west side.
 export const VALUE_SIGN = { x: -9.4, z: -11.2 }
-// Big "MAKE MONEY" board beside the Blue Stall, on the pad side of it.
+// Big "MAKE MONEY" board beside the Sell Stall, on the pad side of it.
 export const MONEY_SIGN = { x: 8.5, z: -12.6 }
+// Big teal-lettered "SAVE FOOD EFFECTS" board beside the Save Food Effect Stall, on its
+// south-east side, level with the stall like the Boost Sign.
+export const FOOD_SIGN = { x: -8.3, z: 11.6 }
+// Dark "DAILY SIZE BOOST" board on the pad-facing right of the Daily Size Boost Stall.
+export const BOOST_SIGN = { x: 10.5, z: 13.4 }
 export const POTTY = { x: -1.1, z: -15.6 }
-export const CASH = { x: -1.1, z: -10.6 }
 
 // Bare tree + leafy bush pairs.
 export const TREES = [
   { x: -4, z: -22, rot: 0.3, seed: 21, bush: [-1.2, -20.6] }, // north rim
   { x: 0.2, z: 20.4, rot: 2.1, seed: 33, bush: [3.2, 19] }, // south rim
+  { x: 9.3, z: 17.1, rot: 1.2, seed: 45, bush: [10.4, 15.6] }, // behind the Boost Sign
 ]
 export const BUSHES = [
   [-19.4, 6.8, 1.5],
@@ -81,7 +90,6 @@ export const ROCKS = [
 // Daily-reward NPCs (brown blocky figure + wooden board beside it). Stalls,
 // the potty, signs and NPCs all turn to face the pad (see facePad).
 export const NPCS = [
-  { x: -21.6, z: -6.4, label: 'CLAIM ONCE PER 24 HOURS', board: [-22.4, -3.6] },
   { x: -16.6, z: 9.8, label: 'CLAIM ONCE PER 24 HOURS', board: [-14.8, 11.2] },
 ]
 
@@ -92,6 +100,18 @@ export const SIGNS = [
 ]
 
 export const JAR = { x: 19.2, z: 2.6 }
+export const JAR_SCALE = 2 // jar model, label and effects are built at 1x and scaled
+
+// "Press E to ..." zones: hold E within `r` metres of (x, z) to trigger
+// (systems/interact.js). `prompt` is the label after the E keycap.
+export const INTERACTS = [
+  { id: 'buy', x: STALLS[0].x, z: STALLS[0].z, r: 3.6, prompt: 'Buy Food' },
+  { id: 'sell', x: STALLS[1].x, z: STALLS[1].z, r: 3.6, prompt: 'Sell Poop' },
+  { id: 'boost', x: STALLS[2].x, z: STALLS[2].z, r: 3.6, prompt: 'Claim Size Boost' },
+  { id: 'foodFx', x: STALLS[3].x, z: STALLS[3].z, r: 3.6, prompt: 'Save Food Effects' },
+  { id: 'reward', x: NPCS[0].x, z: NPCS[0].z, r: 2.6, prompt: 'Claim Reward' },
+  { id: 'jar', x: JAR.x, z: JAR.z, r: 2.8 * JAR_SCALE, prompt: 'Open Jar' },
+]
 
 // Yaw that turns a model's +Z front toward the pad centre.
 export function facePad(x, z) {
@@ -105,8 +125,10 @@ export const OBSTACLES = [
   ...STALLS.map((s) => [s.x, s.z, s.vendor ? 2 : 1.8]),
   [VALUE_SIGN.x, VALUE_SIGN.z, 0.5],
   [MONEY_SIGN.x, MONEY_SIGN.z, 0.5],
+  [FOOD_SIGN.x, FOOD_SIGN.z, 0.5],
+  [BOOST_SIGN.x, BOOST_SIGN.z, 0.5],
   [POTTY.x, POTTY.z, 0.9],
-  [JAR.x, JAR.z, 1.3],
+  [JAR.x, JAR.z, 1.3 * JAR_SCALE],
   ...TREES.map((t) => [t.x, t.z, 0.35]),
   ...COLUMNS.slice(0, 1).map((c) => [c.x, c.z, 0.7]),
   ...ROCKS.map(([x, z, r]) => [x, z, r]),

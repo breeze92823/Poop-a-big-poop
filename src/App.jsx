@@ -12,10 +12,14 @@ import Market from './components/Market.jsx'
 import Landmarks from './components/Landmarks.jsx'
 import ChainedJar from './components/ChainedJar.jsx'
 import Poops from './components/Poops.jsx'
+import GuideArrows from './components/GuideArrows.jsx'
 import Sky from './components/Sky.jsx'
 import Lighting from './components/Lighting.jsx'
 import Player from './components/Player.jsx'
+import RemotePlayers from './components/RemotePlayers.jsx'
 import Hud from './components/Hud.jsx'
+import TouchControls from './components/TouchControls.jsx'
+import RotatePrompt from './components/RotatePrompt.jsx'
 import LoadingScreen from './components/LoadingScreen.jsx'
 
 // Pale blue below the horizon (matches the bottom of the sky dome); the
@@ -70,9 +74,13 @@ export default function App() {
           <Poops />
           <LoadingGate onReady={onSceneReady} />
         </Suspense>
+        <GuideArrows />
         <Player />
+        <RemotePlayers />
       </Canvas>
       <Hud />
+      <TouchControls />
+      <RotatePrompt />
       <LoadingScreen sceneReady={sceneReady} />
     </>
   )

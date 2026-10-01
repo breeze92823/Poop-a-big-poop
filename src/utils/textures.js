@@ -83,22 +83,6 @@ export function stripeTexture(color) {
   }, { repeat: true })
 }
 
-// A banknote bundle: green bill with a paler centre panel and paper band.
-export function cashTexture() {
-  return canvasTexture('cash', 128, 64, (ctx, w, h) => {
-    ctx.fillStyle = '#7cc66a'
-    ctx.fillRect(0, 0, w, h)
-    ctx.fillStyle = '#b9e6a8'
-    ctx.fillRect(8, 8, w - 16, h - 16)
-    ctx.fillStyle = '#5fa851'
-    ctx.beginPath()
-    ctx.arc(w / 2, h / 2, h * 0.22, 0, Math.PI * 2)
-    ctx.fill()
-    ctx.fillStyle = '#f2f6ee'
-    ctx.fillRect(w * 0.42, 0, w * 0.16, h)
-  })
-}
-
 // Dark leaderboard / notice panel with a title and faint rows of text.
 export function boardTexture(title, seed = 1) {
   return canvasTexture(`board-${title}-${seed}`, 512, 320, (ctx, w, h) => {
@@ -270,6 +254,9 @@ export function pillLabelTexture(text) {
 export function outlineTagTexture(text, fill = '#ffffff') {
   return canvasTexture(`tag-${text}-${fill}`, 512, 160, (ctx, w) => {
     ctx.font = `76px ${LABEL_FONT}`
+    // Shrink long labels to fit inside the outline margin.
+    const width = ctx.measureText(text).width
+    if (width > w - 32) ctx.font = `${Math.floor((76 * (w - 32)) / width)}px ${LABEL_FONT}`
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
     ctx.lineJoin = 'round'
@@ -291,10 +278,32 @@ export function outlineTagTexture(text, fill = '#ffffff') {
   })
 }
 
-// Big painted board face: muted brown planks with chunky white words in a
-// black outline, one word per line.
-export function bigSignTexture(lines, board = '#86685a') {
-  return canvasTexture(`bigsign-${lines.join('|')}`, 512, 352, (ctx, w, h) => {
+// Prize label: a big cyan title over a smaller white caption, both in a thick
+// black outline, on transparent (for a sprite).
+export function jarLabelTexture(title, caption) {
+  return canvasTexture(`jarlabel-${title}-${caption}`, 1024, 256, (ctx, w) => {
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.lineJoin = 'round'
+    const line = (text, size, y, fill, stroke) => {
+      ctx.font = `${size}px ${LABEL_FONT}`
+      const width = ctx.measureText(text).width
+      if (width > w - 48) ctx.font = `${Math.floor((size * (w - 48)) / width)}px ${LABEL_FONT}`
+      ctx.lineWidth = stroke
+      ctx.strokeStyle = '#05060a'
+      ctx.strokeText(text, w / 2, y)
+      ctx.fillStyle = fill
+      ctx.fillText(text, w / 2, y)
+    }
+    line(title, 118, 88, '#19d3ff', 24)
+    line(caption, 52, 190, '#ffffff', 14)
+  })
+}
+
+// Big painted board face: muted brown planks with chunky words (white unless
+// `ink` is given) in a black outline, one word per line.
+export function bigSignTexture(lines, board = '#86685a', ink = '#ffffff') {
+  return canvasTexture(`bigsign-${lines.join('|')}-${board}-${ink}`, 512, 352, (ctx, w, h) => {
     const rand = seededRandom(lines.join('').length)
     ctx.fillStyle = board
     ctx.fillRect(0, 0, w, h)
@@ -320,7 +329,7 @@ export function bigSignTexture(lines, board = '#86685a') {
       ctx.lineWidth = size * 0.2
       ctx.strokeStyle = '#141414'
       ctx.strokeText(text, 0, 0)
-      ctx.fillStyle = '#ffffff'
+      ctx.fillStyle = ink
       ctx.fillText(text, 0, 0)
       ctx.restore()
     })
