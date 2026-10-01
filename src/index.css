@@ -122,7 +122,7 @@ canvas { display: block; touch-action: none; }
 /* Bottom-centre timing meter: sweet-spot zone, sweeping needle, progress bar */
 .hud-meter {
   left: 50%; transform: translateX(-50%) scale(0.85); transform-origin: bottom center;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 60px);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 140px);
   width: min(700px, 92vw);
 }
 .hud-meter-box {
@@ -143,9 +143,9 @@ canvas { display: block; touch-action: none; }
   margin: 14px 4px 0; height: 20px; border-radius: 8px; background: #4a4a4a; border: 3px solid #000; box-sizing: border-box;
 }
 /* Phones: shrink the meter with the viewport and keep it clear of the touch buttons / money counter. */
-.touch-mode .hud-meter { width: min(700px, 50vw); bottom: calc(env(safe-area-inset-bottom, 0px) + 48px); }
+.touch-mode .hud-meter { width: min(700px, 50vw); bottom: calc(env(safe-area-inset-bottom, 0px) + 160px); }
 @media (max-height: 520px) {
-  .hud-meter { transform: translateX(-50%) scale(0.7); bottom: calc(env(safe-area-inset-bottom, 0px) + 42px); }
+  .hud-meter { transform: translateX(-50%) scale(0.7); bottom: calc(env(safe-area-inset-bottom, 0px) + 130px); }
   .hud-meter-poop { font-size: 36px; }
 }
 @media (max-width: 600px) {
@@ -446,3 +446,115 @@ canvas { display: block; touch-action: none; }
 .fx-tip-line { font-size: 22px; line-height: 1.1; text-transform: none; color: #fff; }
 .fx-tip-line:first-of-type { text-transform: uppercase; }
 .fx-tip-note { margin-top: 8px; padding-top: 8px; font-size: 16px; color: #ffcf4a; border-top: 2px solid #7a5a3a; -webkit-text-stroke-width: 2px !important; }
+
+/* ---- Mobile pass: phones in landscape (short) and narrow windows ---- */
+.fx-tile:focus { outline: none; border-color: #ffcf4a; z-index: 3; }
+.fx-tile:focus .fx-tip { display: flex; }
+.hud-login { top: calc(env(safe-area-inset-top, 0px) + 12px); left: calc(env(safe-area-inset-left, 0px) + 12px); }
+.action-result { top: calc(env(safe-area-inset-top, 0px) + 56px); }
+.touch-mode .foodbar {
+  left: calc(env(safe-area-inset-left, 0px) + 14px); transform: none; bottom: calc(env(safe-area-inset-bottom, 0px) + 62px);
+  max-width: calc(100vw - 270px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px));
+  overflow-x: auto; padding-top: 10px; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+}
+.touch-mode .foodbar::-webkit-scrollbar { display: none; }
+.touch-mode .foodbar-card { width: 72px; height: 60px; padding: 4px 6px; border-radius: 10px; }
+.touch-mode .foodbar-name { font-size: 13px; }
+.touch-mode .foodbar-poop .foodbar-name { font-size: 11px; }
+.touch-mode .foodbar-count { font-size: 13px; }
+.touch-mode .foodbar-icon { font-size: 22px !important; right: 5px; top: 5px; }
+
+@media (max-width: 640px), (max-height: 520px) {
+  .shop-overlay {
+    gap: 6px; padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+  }
+  .shop-stack { transform: none; max-height: 100%; min-height: 0; gap: 6px; }
+  .shop-panel { flex: 0 1 auto; min-height: 0; height: min(600px, 100%); border-width: 4px; border-radius: 20px 20px 16px 16px; }
+  .boost-panel, .fx-panel { height: auto; max-height: 100%; overflow-y: auto; overscroll-behavior: contain; }
+  .shop-warning { font-size: 13px; -webkit-text-stroke-width: 3px; }
+  .shop-head { padding: 10px 64px 10px 16px; font-size: 22px; -webkit-text-stroke-width: 3px; border-bottom-width: 4px; }
+  .shop-close { width: 52px; height: 48px; }
+  .shop-close svg { width: 24px; height: 24px; }
+  .shop-list { padding: 10px; gap: 10px; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+  .shop-item { align-items: center; }
+  .shop-name { text-shadow: none; -webkit-text-stroke-width: 2px; }
+  .boost-head { padding-right: 64px; flex-wrap: wrap; }
+  .boost-body, .fx-body { padding: 10px 12px 14px; gap: 10px; }
+  .boost-today { padding: 8px 12px; gap: 10px; }
+  .boost-days { gap: 4px; }
+  .boost-day { gap: 2px; border-width: 2px; }
+  .boost-claim, .fx-save { min-height: 44px; padding: 4px 28px; }
+  .boost-skip { min-height: 36px; }
+  .fx-head { padding: 8px 64px 8px 14px; }
+  .fx-title { -webkit-text-stroke-width: 4px; }
+  .fx-section { padding: 10px 12px; gap: 8px; border-width: 3px; border-radius: 16px; }
+  .fx-row { flex-wrap: wrap; gap: 4px 12px; }
+  .fx-tile { width: clamp(56px, 14vw, 88px); }
+  /* No hover on touch: tap a tile to show its tooltip as a centred card. */
+  .fx-tip, .fx-tile:nth-child(n+4) .fx-tip {
+    position: fixed; left: 50%; right: auto; top: 50%; transform: translate(-50%, -50%); width: min(300px, 86vw); padding: 10px 14px; z-index: 12;
+  }
+  .fx-tip-icon { font-size: 36px; }
+  .fx-tip-effect { font-size: 22px; }
+  .fx-tip-line { font-size: 17px; }
+  .fx-tip-food { font-size: 15px; }
+}
+@media (max-width: 640px) {
+  .shop-name { font-size: 18px; }
+  .shop-rarity { min-width: 90px; font-size: 15px; }
+  .hud-money { left: 14px; bottom: 14px; }
+}
+@media (max-height: 420px) {
+  .hud-banner { top: 14%; }
+  .interact-prompt { padding: 6px 12px; }
+  .shop-icon { width: 64px; height: 64px; font-size: 36px; }
+  .shop-item { padding: 8px; gap: 10px; }
+  .shop-stock, .shop-discount { font-size: 14px; }
+  .shop-price { font-size: 22px; }
+  .touch-mode .foodbar { bottom: calc(env(safe-area-inset-bottom, 0px) + 54px); }
+}
+
+/* Short phone screens: squeeze the boost / save-effects windows so Claim and Save stay on screen. */
+@media (max-height: 460px) {
+  .shop-head { padding-top: 6px; padding-bottom: 6px; font-size: 18px; }
+  .shop-close { width: 44px; height: 40px; }
+  .shop-warning { font-size: 11px; -webkit-text-stroke-width: 2px; }
+  .boost-body, .fx-body { padding: 6px 10px 10px; gap: 6px; }
+  .boost-warn { font-size: 12px; -webkit-text-stroke-width: 2px; text-shadow: none; }
+  .boost-today { padding: 4px 12px; }
+  .boost-today-icon { font-size: 30px; }
+  .boost-big { font-size: 20px; -webkit-text-stroke-width: 3px; }
+  .boost-side-val { font-size: 16px; -webkit-text-stroke-width: 3px; }
+  .boost-day { aspect-ratio: auto; padding: 4px 0; }
+  .boost-day-m { font-size: 15px; -webkit-text-stroke-width: 2px; }
+  .boost-claim, .fx-save { font-size: 20px; min-height: 40px; padding: 2px 28px; border-width: 3px; -webkit-text-stroke-width: 3px; }
+  .fx-head { padding: 6px 52px 6px 14px; }
+  .fx-title { font-size: 22px; -webkit-text-stroke-width: 3px; }
+  .fx-sub { font-size: 11px; -webkit-text-stroke-width: 2px; }
+  .fx-section { padding: 6px 10px; gap: 4px; }
+  .fx-heading { font-size: 16px; -webkit-text-stroke-width: 3px; }
+  .fx-status { font-size: 11px; -webkit-text-stroke-width: 2px; }
+  .fx-empty { padding: 4px 0; font-size: 18px; -webkit-text-stroke-width: 3px; }
+  .fx-tile { width: 56px; }
+  .fx-note { font-size: 10px; -webkit-text-stroke-width: 2px; }
+  .shop-item { padding: 6px 8px; gap: 8px; }
+  .shop-icon { width: 52px; height: 52px; font-size: 30px; border-width: 3px; }
+  .shop-name { font-size: 17px; }
+  .shop-price { font-size: 19px; }
+  .shop-effect { font-size: 10px; }
+  .shop-mut { font-size: 11px; }
+  .shop-rarity { min-width: 80px; font-size: 13px; padding: 1px 8px; -webkit-text-stroke-width: 2px; }
+  .shop-list { gap: 6px; padding: 6px 8px; }
+}
+
+/* Tutorial arrows on phones: the scrolling touch hotbar clips its children, so give the down-arrow
+   headroom inside it, and shrink every arrow to fit the smaller UI. */
+.touch-mode .foodbar { padding-top: 50px; }
+@media (max-width: 640px), (max-height: 520px) {
+  .guide-arrow { width: 34px; height: 22px; }
+  .guide-arrow-down { top: -30px; margin-left: -17px; }
+  .guide-arrow-right { margin: -11px 6px 0 0; }
+  .guide-arrow-left { right: 10px; margin-top: -11px; }
+  .tutorial-arrow { width: 48px; height: 30px; margin-top: -15px; right: calc(env(safe-area-inset-right, 0px) + 58px); }
+  .touch-mode .foodbar-card { overflow: visible; }
+}

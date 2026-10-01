@@ -12,8 +12,9 @@ import FoodBar from './FoodBar.jsx'
 import Tutorial, { ChargeArrow } from './Tutorial.jsx'
 import { reportTutorialEvent } from '../systems/tutorial.js'
 import { FOODS } from '../systems/shop.js'
-import { consumeSelected } from '../systems/pantry.js'
-import { awardPoop, getSelectedPoopType, getMoney, subscribeMoney } from '../systems/poop.js'
+import { consumeSelected, getPantry } from '../systems/pantry.js'
+import { showActionResult } from '../systems/actionResult.js'
+import { MAX_POOPS, awardPoop, isInventoryFull, getSelectedPoopType, getMoney, subscribeMoney } from '../systems/poop.js'
 
 function FpsMeter() {
   const [fps, setFps] = useState(0)
@@ -109,6 +110,7 @@ export default function Hud() {
   const [charge, setCharge] = useState(0) // bar fill (0..1) captured on release
   const [progress, setProgress] = useState(0) // 0..1; reaching 1 pays out charge * REWARD_MAX
   const live = useRef(0)
+  const chargeId = useRef(null) // pointer that started the charge, so another finger can't end it
   const needle = useRef(null)
   const needlePos = useRef(0) // live needle position, % of the meter box
   const st = useRef({ phase: 'idle', charge: 0, progress: 0 })
@@ -138,9 +140,19 @@ export default function Hud() {
 
   useEffect(() => {
     const down = (e) => {
-      if (e.button !== 0 || e.target.closest('button, .shop-overlay')) return
+      if (e.button !== 0 || e.target.closest('button:not(.touch-btn-big), .shop-overlay')) return
+      // Touch: the stick never counts, and in idle the look area doesn't start a charge either
+      // (the POOP button does); once the meter is up a tap on the look area lands the needle.
+      if (e.target.closest('.touch-stick-zone')) return
       const s = st.current
+      if (s.phase === 'idle' && e.target.closest('.touch-look')) return
       if (s.phase === 'idle') {
+        chargeId.current = e.pointerId
+        // A selected food is eaten into the poop, so it frees its own slot.
+        if (isInventoryFull() && !getPantry().selected) {
+          showActionResult(`Inventory full (${MAX_POOPS}/${MAX_POOPS}) · sell some poop`, false)
+          return
+        }
         setPhase('charging')
       } else if (s.phase === 'meter') {
         // Land the needle: red/green fills the progress bar, a miss hides the meter.
@@ -162,7 +174,7 @@ export default function Hud() {
       }
     }
     const up = (e) => {
-      if (e.button !== 0 || st.current.phase !== 'charging') return
+      if (e.button !== 0 || st.current.phase !== 'charging' || e.pointerId !== chargeId.current) return
       setCharge(live.current)
       setPhase('meter')
     }

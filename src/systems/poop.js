@@ -1,11 +1,14 @@
 import { PALETTE } from '../materials/tile.js'
 import { getBoostMult } from './boost.js'
 import { playFart } from './sfx.js'
+import { getFoodCount } from './pantry.js'
 
 // Meter-to-poop: a finished meter round drops a poop behind the player and stores its
 // yield in the inventory (selling it for money comes later). Plain module state, mutated
 // in place; the frame loop reads `poops` directly and the HUD subscribes to the totals.
 export const POOP_LIFE = 8 // s a poop stays on the grass
+
+export const MAX_POOPS = 6 // most poops the inventory can hold
 
 export const poops = [] // { x, y, z, yaw, size, color, age }
 
@@ -61,6 +64,15 @@ export function getInventory() {
   return inventory
 }
 
+// Foods and poops share the one cap: MAX_POOPS items in total.
+export function getHeldCount() {
+  return getFoodCount() + stacks.length
+}
+
+export function isInventoryFull() {
+  return getHeldCount() >= MAX_POOPS
+}
+
 export function subscribeInventory(fn) {
   invListeners.add(fn)
   return () => invListeners.delete(fn)
@@ -85,6 +97,7 @@ export function toggleStack(key) {
 // `food` (selected in the hotbar) the poop is "<Effect> Poop", takes the food's colour,
 // and a VALUE food multiplies the yield while a SIZE food makes the poop bigger.
 export function awardPoop(amount, food = null) {
+  if (isInventoryFull()) return false
   const kind = food ? { type: food.id, name: `${food.effect} Poop`, color: food.color } : { ...PLAIN, type: PLAIN.key }
   const value = (food && food.stat === 'VALUE' ? amount * food.mult : amount) * getBoostMult()
   stacks = [...stacks, { ...kind, key: `p${nextId++}`, value }]
@@ -93,6 +106,7 @@ export function awardPoop(amount, food = null) {
   playFart()
   for (const fn of dropListeners) fn(kind.type)
   emitInventory()
+  return true
 }
 
 let lastSale = 0 // cash from the most recent sale
@@ -149,7 +163,7 @@ export function takeAllPoops() {
 
 // Adds stolen { type, value } poops to the inventory (not counted as drops). `foods` is shop.js's FOODS.
 export function addPoops(list, foods) {
-  const added = list.flatMap((s) => {
+  const added = list.slice(0, Math.max(0, MAX_POOPS - getHeldCount())).flatMap((s) => {
     const food = foods.find((f) => f.id === s.type)
     if (!food && s.type !== PLAIN.key) return []
     if (!(typeof s.value === 'number' && s.value > 0)) return []
@@ -182,7 +196,7 @@ export function hydrate(d, foods) {
   money = num(d.money, money)
   totalEarned = num(d.totalEarned, totalEarned)
   totalPoops = num(d.totalPoops, totalPoops)
-  stacks = (Array.isArray(d.poops) ? d.poops : []).flatMap((s) => {
+  stacks = (Array.isArray(d.poops) ? d.poops : []).slice(0, MAX_POOPS).flatMap((s) => {
     const food = foods.find((f) => f.id === s.type)
     if (!food && s.type !== PLAIN.key) return []
     const kind = food ? { type: food.id, name: `${food.effect} Poop`, color: food.color } : { ...PLAIN, type: PLAIN.key }

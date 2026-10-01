@@ -11,7 +11,7 @@ function FoodTiles({ slots, note }) {
         const food = FOODS.find((f) => f.id === id)
         if (!food) return null
         return (
-          <div key={id} className="fx-tile">
+          <div key={id} className="fx-tile" tabIndex={0}>
             <span className="fx-tile-icon">{food.icon}</span>
             <span className="fx-tile-name">{food.effect}</span>
             {count > 1 && <span className="fx-tile-count">x{count}</span>}
