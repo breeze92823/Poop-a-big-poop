@@ -54,6 +54,18 @@ export function pressTouchPoop() {
   inputState.poop = true // consumed + cleared by GameLoop
 }
 
+// Hold-to-interact: the E button is held, not tapped (systems/interact.js).
+const INTERACT_KEY = 'KeyE'
+const touchInteractState = { down: false }
+
+export function pressTouchInteract() {
+  touchInteractState.down = true
+}
+
+export function releaseTouchInteract() {
+  touchInteractState.down = false
+}
+
 const TAP_MAX_MS = 350
 const TAP_MAX_PX = 10
 let tap = null // { id, x, y, t } of the pointer that might become a tap
@@ -97,9 +109,7 @@ function onPointerDown(e) {
 
 function onPointerUp(e) {
   if (tap && e.pointerId === tap.id) {
-    const quick = performance.now() - tap.t < TAP_MAX_MS
-    const still = Math.hypot(e.clientX - tap.x, e.clientY - tap.y) < TAP_MAX_PX
-    if (quick && still) inputState.poop = true
+    // Canvas taps no longer poop directly: the HUD charge bar + timing meter decide the reward.
     tap = null
   }
   if (e.pointerType === 'touch') return
@@ -113,6 +123,7 @@ function onPointerMove(e) {
 }
 
 function onWheel(e) {
+  if (e.target instanceof Element && e.target.closest('.shop-overlay')) return // scrolls the shop list instead
   inputState.zoom += e.deltaY
 }
 
@@ -120,8 +131,15 @@ function onContextMenu(e) {
   e.preventDefault() // right-drag is the orbit gesture
 }
 
+// Continuous "is the interact key physically held" signal (keyboard E or the
+// touch E button), polled once per frame by systems/interact.js.
+export function isInteractKeyDown() {
+  return held.has(INTERACT_KEY) || touchInteractState.down
+}
+
 function onBlur() {
   held.clear()
+  touchInteractState.down = false
   orbiting = false
   inputState.jump = false
   inputState.move.x = 0

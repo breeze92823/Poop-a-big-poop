@@ -3,12 +3,12 @@
 // 20-sided grass island with a swirl pad in the middle.
 //
 //                 bare tree + bush (N rim)
-//            [red stall] [potty] [blue stall]
+//            [buy stall] [potty] [sell stall]
 //                     $$ cash pile           brown blocks (NE rim)
 //   board+NPC                                  [EAST CLIFF] fallen column
 //   [WEST CLIFF]          ( swirl pad )         short pillar, rocks
 //   column, bush                                 (chained jar, SE)
-//         board+NPC                    [yellow stall] boost sign
+//         board+NPC                    [boost stall] boost sign
 //                 bare tree + bush (S rim)     tree + bush
 export const GROUND_Y = 0
 
@@ -45,22 +45,22 @@ export const BLOCKS = [-35, -42, -49, -56].map((deg, i) => ({
 }))
 
 export const STALLS = [
-  // red/white food stand: green tag, long-haired ginger shopkeeper in navy
+  // BUY stall (Increase Poop Value): red/white food stand: green tag, long-haired ginger shopkeeper in navy
   { x: -7.1, z: -14, stripe: '#e8323a', vendor: 'BUY FOOD', tag: '#7ae35a', look: 'ginger' },
-  { x: 4.9, z: -13.7, stripe: '#3d8fe0', vendor: 'SELL POOP' }, // blue/white, plank fence + vendor
-  // yellow/white daily size-boost stand, south-east of the pad: shopkeeper in a peaked cap
+  { x: 4.9, z: -13.7, stripe: '#3d8fe0', vendor: 'SELL POOP' }, // SELL stall (Make Money): blue/white, plank fence + vendor
+  // DAILY SIZE BOOST stall: yellow/white stand, south-east of the pad: shopkeeper in a peaked cap
   { x: 13, z: 11.5, stripe: '#f2c81c', vendor: 'SIZE BOOST', tag: '#f5d63a', look: 'cap' },
-  // teal/white limited-time stand, next to the West Reward NPC
+  // SAVE FOOD EFFECT stall: teal/white stand, next to the West Reward NPC
   { x: -16.6, z: -8.6, stripe: '#25b89a', vendor: '24 HOURS ONLY', tag: '#3fd6b8', look: 'ginger' },
 ]
-// Big "INCREASE POOP VALUE" board beside the Red Stall, on its west side.
+// Big "INCREASE POOP VALUE" board beside the Buy Stall, on its west side.
 export const VALUE_SIGN = { x: -9.4, z: -11.2 }
-// Big "MAKE MONEY" board beside the Blue Stall, on the pad side of it.
+// Big "MAKE MONEY" board beside the Sell Stall, on the pad side of it.
 export const MONEY_SIGN = { x: 8.5, z: -12.6 }
-// Big teal-lettered "SAVE FOOD EFFECTS" board beside the Teal Stall, on its
+// Big teal-lettered "SAVE FOOD EFFECTS" board beside the Save Food Effect Stall, on its
 // south-west (left, seen from the pad) side.
 export const FOOD_SIGN = { x: -14.8, z: -5.4 }
-// Dark "DAILY SIZE BOOST" board on the pad-facing right of the Yellow Stall.
+// Dark "DAILY SIZE BOOST" board on the pad-facing right of the Daily Size Boost Stall.
 export const BOOST_SIGN = { x: 10.5, z: 13.4 }
 export const POTTY = { x: -1.1, z: -15.6 }
 export const CASH = { x: -1.1, z: -10.6 }
@@ -101,6 +101,17 @@ export const SIGNS = [
 ]
 
 export const JAR = { x: 19.2, z: 2.6 }
+
+// "Press E to ..." zones: hold E within `r` metres of (x, z) to trigger
+// (systems/interact.js). `prompt` is the label after the E keycap.
+export const INTERACTS = [
+  { id: 'buy', x: STALLS[0].x, z: STALLS[0].z, r: 3.6, prompt: 'Buy Food' },
+  { id: 'sell', x: STALLS[1].x, z: STALLS[1].z, r: 3.6, prompt: 'Sell Poop' },
+  { id: 'boost', x: STALLS[2].x, z: STALLS[2].z, r: 3.6, prompt: 'Claim Size Boost' },
+  { id: 'foodFx', x: STALLS[3].x, z: STALLS[3].z, r: 3.6, prompt: 'Save Food Effects' },
+  { id: 'reward', x: NPCS[0].x, z: NPCS[0].z, r: 2.6, prompt: 'Claim Reward' },
+  { id: 'jar', x: JAR.x, z: JAR.z, r: 2.8, prompt: 'Open Jar' },
+]
 
 // Yaw that turns a model's +Z front toward the pad centre.
 export function facePad(x, z) {

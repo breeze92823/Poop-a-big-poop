@@ -55,6 +55,13 @@ export function makeGait(built) {
     spineBind: null,
   }
 
+  // Arm bones + bind poses, for the held-item pose (setHolding) on either path.
+  const nodes0 = built.nodes || {}
+  gait.holding = false
+  gait.arms = ['ArmL1', 'ArmR1']
+    .filter((n) => nodes0[n])
+    .map((n) => ({ bone: nodes0[n], bind: nodes0[n].quaternion.clone() }))
+
   // --- Path 1: an embedded clip ------------------------------------------
   const run = (built.clips || []).find((c) => GAIT.runClip.test(c.name))
   if (run) {
@@ -85,10 +92,27 @@ export function makeGait(built) {
   return gait
 }
 
+// Both arms straight up (a bit past vertical in the swing axis), holding an
+// item overhead. Applied last in updateGait so it wins over walk/idle/airborne.
+const HOLD_ARM = -3.0
+export function setHolding(gait, on) {
+  if (gait) gait.holding = on
+}
+
+function applyHold(gait) {
+  gait.q.setFromAxisAngle(gait.axis, HOLD_ARM)
+  for (const a of gait.arms) a.bone.quaternion.copy(a.bind).premultiply(gait.q)
+}
+
 // speed01: horizontal speed / max move speed. Values outside 0..1 are
 // clamped. grounded (default true) gates the airborne pose below.
 export function updateGait(gait, dt, speed01, grounded = true) {
   if (!gait || dt <= 0) return
+  tickGait(gait, dt, speed01, grounded)
+  if (gait.holding) applyHold(gait)
+}
+
+function tickGait(gait, dt, speed01, grounded) {
 
   const target = speed01 < 0 ? 0 : speed01 > 1 ? 1 : speed01
   // Exponential ease so a start or stop does not snap mid-stride.

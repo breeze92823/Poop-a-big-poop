@@ -8,6 +8,7 @@
 // from Ice-Skate), trimmed of the audio/sfx hooks this project doesn't have.
 import { GAME_SLUG, SETTINGS, DEV_MODE } from '../data/bloxity.js'
 import { setCameraSensitivity, syncYawToPlayer } from './cameraOrbit.js'
+import { setMasterVolume, setMusicVolume } from './audio.js'
 import { settings, setSetting, subscribe as subscribeSettings } from './settingsState.js'
 import { resetPlayer } from './playerState.js'
 import { SPAWN, SPAWN_FACING } from '../data/world.js'
@@ -63,8 +64,13 @@ function applySetting(key) {
     case 'fullscreen':
       requestFullscreen(value)
       break
+    case 'master_volume':
+      setMasterVolume(value)
+      break
+    case 'music_volume':
+      setMusicVolume(value)
+      break
     default:
-      // master_volume/music_volume have no audio system to drive yet;
       // graphics_quality/show_fps/enable_chat/background_transparency are
       // read straight out of settingsState by the components that use them
       // (App.jsx, Hud.jsx).

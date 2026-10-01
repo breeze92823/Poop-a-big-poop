@@ -7,7 +7,11 @@ import { DEV_MODE } from '../data/bloxity.js'
 import { applyProportions, attachEquippedAccessories } from '../systems/avatarLoader.js'
 import { buildDefaultCharacter, loadBaseCharacter } from '../systems/defaultCharacter.js'
 import { useGameStore } from '../store/useGameStore.js'
-import { makeGait, updateGait, disposeGait } from '../systems/avatarAnim.js'
+import { makeGait, updateGait, disposeGait, setHolding } from '../systems/avatarAnim.js'
+import { getPoopStacks } from '../systems/poop.js'
+import { poopScale } from '../systems/poop.js'
+import { heldPoopGeometry } from '../utils/heldPoopGeometry.js'
+import { RIG_HEIGHT } from '../data/bloxity.js'
 
 const _up = new Vector3(0, 1, 0)
 const _targetQuat = new Quaternion()
@@ -75,6 +79,9 @@ export default function Player() {
   const ref = useRef()
   const avatar = useBloxityAvatar()
   const gaitRef = useRef(null)
+  const heldRef = useRef()
+  const heldMat = useRef()
+  const handY = (7.2 / RIG_HEIGHT) * player.dims.height
 
   // Rebuilt per loaded avatar — the gait's cached bind-pose quaternions
   // (see avatarAnim.js) belong to one specific rig instance.
@@ -96,7 +103,14 @@ export default function Player() {
     _targetQuat.setFromAxisAngle(_up, player.facing)
     g.quaternion.slerp(_targetQuat, 1 - Math.pow(TURN_RATE, delta))
 
+    const { stacks, selected } = getPoopStacks()
+    const held = selected ? stacks.find((s) => s.key === selected) : null
+    if (heldRef.current) heldRef.current.visible = !!held
+    if (held && heldMat.current) heldMat.current.color.set(held.color)
+    if (held && heldRef.current) heldRef.current.scale.setScalar(poopScale(held.value))
+
     const gait = gaitRef.current
+    setHolding(gait, !!held)
     if (gait) {
       const speed01 = Math.hypot(player.velocity.x, player.velocity.z) / player.moveSpeed
       updateGait(gait, Math.min(delta, 0.1), speed01, player.grounded)
@@ -106,6 +120,15 @@ export default function Player() {
   return (
     <group ref={ref}>
       <primitive object={avatar} />
+      <mesh
+        ref={heldRef}
+        visible={false}
+        geometry={heldPoopGeometry()}
+        position={[0, handY - 0.05, 0]}
+        castShadow
+      >
+        <meshStandardMaterial ref={heldMat} color="#ffffff" roughness={0.5} />
+      </mesh>
     </group>
   )
 }

@@ -1,14 +1,14 @@
 import { useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { Object3D } from 'three'
+import { Color, Object3D } from 'three'
 import { POOP_LIFE, poops } from '../systems/poop.js'
 import { poopGeometry } from '../utils/poopGeometry.js'
-import { PALETTE } from '../materials/tile.js'
 
 const CAPACITY = 48
 const POP = 0.28 // s pop-in
 const SHRINK = 0.6 // s shrink-out at end of life
 const dummy = new Object3D()
+const tint = new Color()
 
 // easeOutBack: overshoots a little so each drop "plops".
 function plop(t) {
@@ -32,13 +32,15 @@ export default function Poops() {
       dummy.scale.set(p.size * s, p.size * s * (p.age < POP ? 2 - s : 1), p.size * s)
       dummy.updateMatrix()
       m.setMatrixAt(i, dummy.matrix)
+      m.setColorAt(i, tint.set(p.color))
     })
     m.count = poops.length
     m.instanceMatrix.needsUpdate = true
+    if (m.instanceColor) m.instanceColor.needsUpdate = true
   })
   return (
     <instancedMesh ref={mesh} args={[poopGeometry(), undefined, CAPACITY]} count={0} frustumCulled={false} castShadow>
-      <meshStandardMaterial color={PALETTE.poop} roughness={0.5} />
+      <meshStandardMaterial color="#ffffff" roughness={0.5} />
     </instancedMesh>
   )
 }

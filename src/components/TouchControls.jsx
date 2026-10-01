@@ -7,7 +7,11 @@ import {
   addTouchZoom,
   pressTouchJump,
   pressTouchPoop,
+  pressTouchInteract,
+  releaseTouchInteract,
 } from '../systems/input.js'
+import { interactState } from '../systems/interact.js'
+import { playButtonClick } from '../systems/sfx.js'
 
 // On-screen controls for a touch session. DOM siblings of the canvas, like the
 // rest of the HUD: gestures write straight into the input singleton through
@@ -192,9 +196,43 @@ function ActionButton({ onPress, label, className }) {
   )
 }
 
+// Held, not tapped: the zone's action fires once the hold ring completes
+// (systems/interact.js), and lifting the finger cancels it.
+function HoldButton({ onDown, onUp, label, className }) {
+  const [down, setDown] = useState(false)
+  const release = () => {
+    setDown(false)
+    onUp()
+  }
+  return (
+    <button
+      type="button"
+      onPointerDown={(e) => {
+        e.currentTarget.setPointerCapture(e.pointerId)
+        setDown(true)
+        onDown()
+      }}
+      onPointerUp={release}
+      onPointerCancel={release}
+      onContextMenu={(e) => e.preventDefault()}
+      className={`touch-btn ${className}${down ? ' is-down' : ''}`}
+    >
+      {label}
+    </button>
+  )
+}
+
 export default function TouchControls() {
   const [on, setOn] = useState(touchState.active)
+  const [canInteract, setCanInteract] = useState(false)
   useEffect(() => subscribeTouchMode(setOn), [])
+
+  // The E button only shows while a zone is in range.
+  useEffect(() => {
+    if (!on) return
+    const id = setInterval(() => setCanInteract(!!interactState.zone), 100)
+    return () => clearInterval(id)
+  }, [on])
 
   // Backgrounding the tab mid-gesture must not leave the avatar walking.
   useEffect(() => {
@@ -215,6 +253,17 @@ export default function TouchControls() {
       <LookZone />
       <MoveStick />
       <div className="touch-cluster">
+        {canInteract && (
+          <HoldButton
+            onDown={() => {
+              playButtonClick()
+              pressTouchInteract()
+            }}
+            onUp={releaseTouchInteract}
+            label="E"
+            className="touch-btn-e"
+          />
+        )}
         <ActionButton onPress={pressTouchJump} label="JUMP" className="touch-btn-small" />
         <ActionButton onPress={pressTouchPoop} label="💩" className="touch-btn-big" />
       </div>
