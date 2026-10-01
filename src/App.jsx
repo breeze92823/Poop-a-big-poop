@@ -16,6 +16,7 @@ import Sky from './components/Sky.jsx'
 import Lighting from './components/Lighting.jsx'
 import Player from './components/Player.jsx'
 import Hud from './components/Hud.jsx'
+import TouchControls from './components/TouchControls.jsx'
 import LoadingScreen from './components/LoadingScreen.jsx'
 
 // Pale blue below the horizon (matches the bottom of the sky dome); the
@@ -73,6 +74,7 @@ export default function App() {
         <Player />
       </Canvas>
       <Hud />
+      <TouchControls />
       <LoadingScreen sceneReady={sceneReady} />
     </>
   )

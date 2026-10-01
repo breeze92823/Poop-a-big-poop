@@ -39,9 +39,11 @@ export function step(dt) {
   const rightZ = -Math.sin(yaw)
 
   const mv = inputState.move
-  const len = Math.hypot(mv.x, mv.z) || 1
-  const wishX = (fwdX * mv.z + rightX * mv.x) / len
-  const wishZ = (fwdZ * mv.z + rightZ * mv.x) / len
+  // Keyboard is a unit vector; the touch stick is analog (magnitude 0..1).
+  const len = Math.hypot(mv.x, mv.z)
+  const scale = len > 1 ? 1 / len : 1
+  const wishX = (fwdX * mv.z + rightX * mv.x) * scale
+  const wishZ = (fwdZ * mv.z + rightZ * mv.x) * scale
 
   approach2D(player.velocity, wishX * PLAYER_MOVE_SPEED, wishZ * PLAYER_MOVE_SPEED, ACCEL * dt)
 

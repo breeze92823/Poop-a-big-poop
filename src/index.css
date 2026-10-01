@@ -7,7 +7,7 @@
   font-family: 'Lilita One', 'Arial Black', system-ui, sans-serif;
 }
 * { box-sizing: border-box; }
-html, body, #root { margin: 0; height: 100%; overflow: hidden; background: #c9e8ec; user-select: none; -webkit-tap-highlight-color: transparent; }
+html, body, #root { margin: 0; height: 100%; overflow: hidden; background: #c9e8ec; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; overscroll-behavior: none; }
 canvas { display: block; touch-action: none; }
 
 .hud { position: fixed; inset: 0; pointer-events: none; color: var(--ink); }
@@ -87,3 +87,42 @@ canvas { display: block; touch-action: none; }
 .loading-swirl i:nth-child(2) { width: 62px; }
 .loading-swirl i:nth-child(3) { width: 38px; }
 @keyframes wobble { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg) translateY(-4px); } }
+
+/* Touch controls (components/TouchControls.jsx); <html> gets .touch-mode on a touch session. */
+.touch-controls { position: fixed; inset: 0; pointer-events: none; touch-action: none; z-index: 5; }
+.touch-look { position: fixed; top: 0; right: 0; bottom: 0; left: 46%; pointer-events: auto; touch-action: none; }
+.touch-stick-zone { position: fixed; left: 0; bottom: 0; width: 45%; height: 58%; pointer-events: auto; touch-action: none; }
+.touch-stick-base, .touch-stick-knob { position: fixed; border-radius: 50%; z-index: 6; pointer-events: none; }
+.touch-stick-base { border: 2px solid rgba(255, 255, 255, 0.55); background: rgba(255, 255, 255, 0.12); }
+.touch-stick-knob { width: 52px; height: 52px; border: 2px solid rgba(255, 255, 255, 0.85); background: rgba(255, 255, 255, 0.4); }
+.touch-cluster {
+  position: fixed; z-index: 7; display: flex; align-items: flex-end; gap: 12px;
+  right: calc(env(safe-area-inset-right, 0px) + 18px); bottom: calc(env(safe-area-inset-bottom, 0px) + 22px);
+}
+.touch-btn {
+  pointer-events: auto; touch-action: none; display: grid; place-items: center; padding: 0;
+  border-radius: 50%; border: 3px solid #1a1a1a; color: #fff; cursor: pointer;
+  font: 400 15px/1 'Luckiest Guy', 'Lilita One', 'Arial Black', sans-serif; letter-spacing: 0.5px;
+  -webkit-text-stroke: 1px #1a1a1a; paint-order: stroke fill;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.4); transition: transform 0.06s;
+}
+.touch-btn.is-down { transform: scale(0.92); }
+.touch-btn-small { width: clamp(56px, 12vmin, 72px); height: clamp(56px, 12vmin, 72px); background: rgba(38, 72, 82, 0.85); }
+.touch-btn-big { width: clamp(76px, 18vmin, 104px); height: clamp(76px, 18vmin, 104px); font-size: clamp(34px, 8vmin, 48px); background: #a5683a; -webkit-text-stroke: 0; }
+
+/* HUD tweaks for phones: safe-area insets and a tighter layout on short screens. */
+.touch-mode .hud-topbar { top: calc(env(safe-area-inset-top, 0px) + 10px); left: calc(env(safe-area-inset-left, 0px) + 12px); gap: 10px; }
+.touch-mode .hud-chat { top: calc(env(safe-area-inset-top, 0px) + 76px); left: calc(env(safe-area-inset-left, 0px) + 12px); }
+.touch-mode .hud-fps { top: calc(env(safe-area-inset-top, 0px) + 10px); right: calc(env(safe-area-inset-right, 0px) + 12px); }
+.touch-mode .hud-money { left: calc(env(safe-area-inset-left, 0px) + 18px); bottom: calc(env(safe-area-inset-bottom, 0px) + 14px); }
+@media (max-height: 520px) {
+  .hud-btn { width: 44px; height: 44px; }
+  .hud-pill { height: 44px; }
+  .hud-pill .hud-btn { width: 44px; }
+  .hud-banner { top: 16%; font-size: clamp(16px, 4vh, 24px); }
+  .touch-mode .hud-chat { top: calc(env(safe-area-inset-top, 0px) + 62px); font-size: 13px; }
+  .hud-money { font-size: clamp(26px, 8vh, 36px); }
+}
+@media (max-width: 600px) {
+  .hud-banner { white-space: normal; text-align: center; width: 80vw; justify-content: center; }
+}
