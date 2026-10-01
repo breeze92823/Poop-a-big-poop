@@ -85,7 +85,7 @@ function RemotePlayer({ p }) {
     g.quaternion.slerp(_targetQuat, 1 - Math.pow(LERP_RATE, delta))
 
     const gait = gaitRef.current
-    if (gait) updateGait(gait, delta, p.moveBlend, p.grounded)
+    if (gait) updateGait(gait, delta, p.moveBlend, p.grounded, p.bending)
   })
 
   return (

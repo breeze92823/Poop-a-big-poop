@@ -14,6 +14,7 @@ import { heldPoopGeometry } from '../utils/heldPoopGeometry.js'
 import { RIG_HEIGHT } from '../data/bloxity.js'
 import { getPantry } from '../systems/pantry.js'
 import { heldFoodModel } from '../utils/heldFood.js'
+import PoopBurst from './PoopBurst.jsx'
 
 const _up = new Vector3(0, 1, 0)
 const _targetQuat = new Quaternion()
@@ -123,14 +124,16 @@ export default function Player() {
     }
 
     const gait = gaitRef.current
-    setHolding(gait, held ? 'up' : food ? 'forward' : false)
+    setHolding(gait, player.bending ? false : held ? 'up' : food ? 'forward' : false)
     if (gait) {
       const speed01 = Math.hypot(player.velocity.x, player.velocity.z) / player.moveSpeed
-      updateGait(gait, Math.min(delta, 0.1), speed01, player.grounded)
+      updateGait(gait, Math.min(delta, 0.1), speed01, player.grounded, player.bending)
     }
   })
 
   return (
+    <>
+    <PoopBurst />
     <group ref={ref}>
       <primitive object={avatar} />
       <mesh
@@ -144,5 +147,6 @@ export default function Player() {
       </mesh>
       <group ref={foodRef} position={[0, (4.0 / RIG_HEIGHT) * player.dims.height, (2.3 / RIG_HEIGHT) * player.dims.height]} />
     </group>
+    </>
   )
 }

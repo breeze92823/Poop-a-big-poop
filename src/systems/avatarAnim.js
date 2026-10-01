@@ -108,10 +108,31 @@ function applyHold(gait) {
 
 // speed01: horizontal speed / max move speed. Values outside 0..1 are
 // clamped. grounded (default true) gates the airborne pose below.
-export function updateGait(gait, dt, speed01, grounded = true) {
+export function updateGait(gait, dt, speed01, grounded = true, bending = false) {
   if (!gait || dt <= 0) return
   tickGait(gait, dt, speed01, grounded)
   if (gait.holding) applyHold(gait)
+  applyBend(gait, dt, bending)
+}
+
+// Bent-over pooping pose: the spine folds forward and the arms hang down. Eased in and
+// out, applied last so it wins over walk/idle/hold. Spine-only, so it works on both paths.
+const BEND_SPINE = 1.25
+const BEND_ARM = 0.35
+const BEND_HZ = 9
+function applyBend(gait, dt, bending) {
+  gait.bend = (gait.bend || 0) + ((bending ? 1 : 0) - (gait.bend || 0)) * (1 - Math.exp(-BEND_HZ * dt))
+  if (gait.bend < 0.001) return
+  const spine = gait.built.nodes && gait.built.nodes.Spine1
+  if (spine) {
+    const bind = gait.spineBind || (gait.spineBind = spine.quaternion.clone())
+    gait.q.setFromAxisAngle(AXES.x, BEND_SPINE * gait.bend)
+    spine.quaternion.copy(bind).premultiply(gait.q)
+  }
+  if (bending) {
+    gait.q.setFromAxisAngle(gait.axis, BEND_ARM * gait.bend)
+    for (const a of gait.arms) a.bone.quaternion.copy(a.bind).premultiply(gait.q)
+  }
 }
 
 function tickGait(gait, dt, speed01, grounded) {
