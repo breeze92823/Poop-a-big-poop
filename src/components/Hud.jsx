@@ -46,11 +46,12 @@ const REWARD_MAX = 100 // poop stored for a full-power (100%) charge bar
 // SWEET_AT / SWEET_W of the zone) is re-rolled at random: size and position both change.
 const NEEDLE_MIN = 4
 const NEEDLE_MAX = 96
-const ZONE_W_MIN = 20
-const ZONE_W_MAX = 46
+const ZONE_W_MIN = 10
+const ZONE_W_MAX = 24
 const SWEET_AT = 0.47 // red centre's left edge, fraction of the zone width (mirrors .hud-meter-sweet)
 const SWEET_W = 0.045 // red centre's width, fraction of the zone width
 const FAST_CHANCE = 0.35 // chance a corner-to-corner sweep runs at double speed
+const TURBO_CHANCE = 0.3 // chance a fast sweep doubles again (4x)
 
 function randomZone() {
   const w = ZONE_W_MIN + Math.random() * (ZONE_W_MAX - ZONE_W_MIN)
@@ -147,7 +148,7 @@ export default function Hud() {
       const prev = ph
       ph += ((now - last) / NEEDLE_PERIOD) * speed
       last = now
-      if (Math.floor(ph) !== Math.floor(prev)) speed = Math.random() < FAST_CHANCE ? 2 : 1
+      if (Math.floor(ph) !== Math.floor(prev)) speed = Math.random() < FAST_CHANCE ? (Math.random() < TURBO_CHANCE ? 4 : 2) : 1
       const p = ph % 2
       const v = p < 1 ? p : 2 - p
       needlePos.current = NEEDLE_MIN + (NEEDLE_MAX - NEEDLE_MIN) * v
