@@ -294,6 +294,28 @@ export function outlineTagTexture(text, fill = '#ffffff') {
   })
 }
 
+// Prize label: a big cyan title over a smaller white caption, both in a thick
+// black outline, on transparent (for a sprite).
+export function jarLabelTexture(title, caption) {
+  return canvasTexture(`jarlabel-${title}-${caption}`, 1024, 256, (ctx, w) => {
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.lineJoin = 'round'
+    const line = (text, size, y, fill, stroke) => {
+      ctx.font = `${size}px ${LABEL_FONT}`
+      const width = ctx.measureText(text).width
+      if (width > w - 48) ctx.font = `${Math.floor((size * (w - 48)) / width)}px ${LABEL_FONT}`
+      ctx.lineWidth = stroke
+      ctx.strokeStyle = '#05060a'
+      ctx.strokeText(text, w / 2, y)
+      ctx.fillStyle = fill
+      ctx.fillText(text, w / 2, y)
+    }
+    line(title, 118, 88, '#19d3ff', 24)
+    line(caption, 52, 190, '#ffffff', 14)
+  })
+}
+
 // Big painted board face: muted brown planks with chunky words (white unless
 // `ink` is given) in a black outline, one word per line.
 export function bigSignTexture(lines, board = '#86685a', ink = '#ffffff') {

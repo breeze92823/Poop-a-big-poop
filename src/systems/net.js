@@ -23,7 +23,19 @@ import {
 } from './bloxity.js'
 import { DEV_MODE } from '../data/bloxity.js'
 import { player } from './playerState.js'
-import { getProgress, hydrate as hydratePoop, subscribeInventory, subscribeMoney, subscribePoopDrop } from './poop.js'
+import {
+  getProgress,
+  hydrate as hydratePoop,
+  subscribeInventory,
+  subscribeMoney,
+  subscribePoopDrop,
+  spendMoney,
+  refundMoney,
+  takeAllPoops,
+  addPoops,
+} from './poop.js'
+import { showActionResult } from './actionResult.js'
+import { hasTheftImmunity, hydrateImmunity, subscribeImmunity } from './theftImmunity.js'
 import { playFart } from './sfx.js'
 import { getBoostData, hydrateBoost, subscribeBoost } from './boost.js'
 import { getSavedFoods, hydrateSavedFoods, subscribeFoodFx } from './foodFx.js'
@@ -38,6 +50,8 @@ import {
   PROGRESS_RESEND_DEBOUNCE_MS,
   MOVE_SEND_INTERVAL_MS,
   USERNAME_WAIT_MS,
+  STEAL_COST,
+  STEAL_RANGE,
 } from '../data/net.js'
 
 // --- Public state -----------------------------------------------------------
@@ -95,6 +109,78 @@ export function subscribeRoster(onAdd, onRemove) {
   return () => rosterListeners.delete(entry)
 }
 
+// The remote player within `range` m of (x, z) that holds poop, nearest first, or null.
+// Returns { id, name, blockedMs } so interact.js can build its prompt without touching schema
+// fields; blockedMs > 0 means they robbed us recently and we can't rob them back yet.
+export function nearestStealTarget(x, z, range = STEAL_RANGE) {
+  const now = Date.now()
+  let best = null
+  let bestD = range
+  for (const [id, p] of remotePlayers) {
+    if (!(p.poopCount > 0) || p.immune) continue
+    const d = Math.hypot(p.x - x, p.z - z)
+    if (d <= bestD) {
+      best = { id, name: p.username || 'Player', blockedMs: Math.max(0, (stealBlocks.get(id) || 0) - now) }
+      bestD = d
+    }
+  }
+  return best
+}
+
+// Pays STEAL_COST up front and asks the room to rob `targetId`; the answer arrives as
+// `stealResult` (refund on failure) and the victim's poop moves into our inventory.
+let stealing = false
+let stealTarget = ''
+// sessionId of a player who robbed us -> epoch ms (local clock) until we may rob them back.
+const stealBlocks = new Map()
+
+export function requestSteal(targetId) {
+  if (stealing) return
+  if ((stealBlocks.get(targetId) || 0) > Date.now()) return showActionResult("Can't steal back yet", false)
+  if (!room) return showActionResult('Not connected', false)
+  if (!spendMoney(STEAL_COST)) return showActionResult(`Need $${STEAL_COST.toLocaleString()} to steal`, false)
+  stealing = true
+  stealTarget = targetId
+  send('steal', { target: targetId })
+}
+
+const STEAL_FAIL_TEXT = {
+  poor: 'Not enough money',
+  far: 'Too far away',
+  empty: 'They have no poop',
+  immune: 'Theft Immunity blocks it',
+  protected: 'They were just robbed',
+  cooldown: 'Too soon, try again',
+  busy: 'Busy, try again',
+  gone: 'Player left',
+  revenge: "Can't steal back yet",
+  timeout: 'Steal failed',
+}
+
+function onStealResult(d) {
+  if (!stealing) return
+  stealing = false
+  if (d?.reason === 'revenge' && d.ms > 0) stealBlocks.set(stealTarget, Date.now() + d.ms)
+  if (!d?.ok) {
+    refundMoney(STEAL_COST)
+    showActionResult(STEAL_FAIL_TEXT[d?.reason] || 'Steal failed', false)
+    return
+  }
+  const { count } = addPoops(Array.isArray(d.poops) ? d.poops : [], FOODS)
+  showActionResult(`Stole ${count} poop from ${d.from || 'Player'}!`, true)
+}
+
+// The server tells us who we can't rob back after being robbed, and for how long.
+function onStealBlock(d) {
+  if (typeof d?.target === 'string' && d.ms > 0) stealBlocks.set(d.target, Date.now() + d.ms)
+}
+
+// We were robbed: give everything up and tell the room what went.
+function onStealRequest(d) {
+  send('stealHandover', { poops: takeAllPoops() })
+  showActionResult(`${d?.by || 'Someone'} stole all your poop!`, false)
+}
+
 // --- Leaderboards -----------------------------------------------------------
 // Server push: { money|totalEarned|totalPoops|playTime: [{ id, name, value }] },
 // best first. `id` equals our sessionId on our own row, so a board can highlight it.
@@ -135,13 +221,13 @@ function send(type, payload) {
 
 // --- Stats + progress -------------------------------------------------------
 function sendStatsNow() {
-  const { money, totalEarned, totalPoops } = getProgress()
-  send('stats', { money, totalEarned, totalPoops })
+  const { money, totalEarned, totalPoops, poops } = getProgress()
+  send('stats', { money, totalEarned, totalPoops, poopCount: poops.length, immune: hasTheftImmunity() })
 }
 
 // Everything the server persists for this player.
 function progressPayload() {
-  return { ...getProgress(), boost: getBoostData(), savedFoods: getSavedFoods(), tutorialDone: isTutorialDone(), tutorialStep: getTutorialStep() }
+  return { ...getProgress(), boost: getBoostData(), savedFoods: getSavedFoods(), tutorialDone: isTutorialDone(), tutorialStep: getTutorialStep(), theftImmune: hasTheftImmunity() }
 }
 
 // The ROOM decides whether this session may persist (its userIds map), so a
@@ -171,6 +257,7 @@ function applyProgress(d) {
     hydrateBoost(d.boost)
     hydrateSavedFoods(d.savedFoods)
     hydrateTutorial(d.tutorialDone, d.tutorialStep)
+    hydrateImmunity(d.theftImmune)
   } catch (err) {
     console.warn('[net] could not apply saved progress', err)
   }
@@ -195,8 +282,8 @@ function scheduleStats() {
 // Every source below fires on far more than it saves (selection, the boost
 // window's 1 s tick), so compare snapshots and only send real changes.
 function onStateChange() {
-  const { money, totalEarned, totalPoops } = getProgress()
-  const snap = `${money}|${totalEarned}|${totalPoops}`
+  const { money, totalEarned, totalPoops, poops } = getProgress()
+  const snap = `${money}|${totalEarned}|${totalPoops}|${poops.length}|${hasTheftImmunity()}`
   if (snap !== lastSnap) {
     lastSnap = snap
     scheduleStats()
@@ -409,6 +496,9 @@ function attachRoom(joined) {
     send('buyFood', { id, tutorial })
     return true
   })
+  room.onMessage('stealResult', onStealResult)
+  room.onMessage('stealRequest', onStealRequest)
+  room.onMessage('stealBlock', onStealBlock)
   room.onMessage('leaderboard', (data) => {
     lastLeaderboard = data || {}
     for (const fn of leaderboardListeners) {
@@ -441,6 +531,7 @@ function attachRoom(joined) {
     recount()
     if (sessionId === selfId) return
     remotePlayers.delete(sessionId)
+    stealBlocks.delete(sessionId)
     notifyRoster('onRemove', sessionId)
   })
 
@@ -458,12 +549,14 @@ function attachRoom(joined) {
 }
 
 function clearRemotePlayers() {
+  stealBlocks.clear()
   for (const sessionId of remotePlayers.keys()) notifyRoster('onRemove', sessionId)
   remotePlayers.clear()
 }
 
 function handleLeave() {
   room = null
+  if (stealing) onStealResult({ ok: false, reason: 'gone' })
   setServerBuy(null)
   shopOffline()
   selfId = ''
@@ -495,6 +588,7 @@ export function init() {
     subscribeBoost(onStateChange),
     subscribeFoodFx(onStateChange),
     subscribeTutorial(onStateChange),
+    subscribeImmunity(onStateChange),
     subscribePoopDrop((type) => send('poop', { type })),
     // subscribeAuth also fires on friends/balance loads; sendIdentityNow()'s own
     // diff check filters those out.
@@ -538,6 +632,7 @@ export function teardown() {
     }
   }
   room = null
+  if (stealing) onStealResult({ ok: false, reason: 'gone' })
   setServerBuy(null)
   shopOffline()
   connecting = false

@@ -101,6 +101,7 @@ export const SIGNS = [
 ]
 
 export const JAR = { x: 19.2, z: 2.6 }
+export const JAR_SCALE = 2 // jar model, label and effects are built at 1x and scaled
 
 // "Press E to ..." zones: hold E within `r` metres of (x, z) to trigger
 // (systems/interact.js). `prompt` is the label after the E keycap.
@@ -110,7 +111,7 @@ export const INTERACTS = [
   { id: 'boost', x: STALLS[2].x, z: STALLS[2].z, r: 3.6, prompt: 'Claim Size Boost' },
   { id: 'foodFx', x: STALLS[3].x, z: STALLS[3].z, r: 3.6, prompt: 'Save Food Effects' },
   { id: 'reward', x: NPCS[0].x, z: NPCS[0].z, r: 2.6, prompt: 'Claim Reward' },
-  { id: 'jar', x: JAR.x, z: JAR.z, r: 2.8, prompt: 'Open Jar' },
+  { id: 'jar', x: JAR.x, z: JAR.z, r: 2.8 * JAR_SCALE, prompt: 'Open Jar' },
 ]
 
 // Yaw that turns a model's +Z front toward the pad centre.
@@ -128,7 +129,7 @@ export const OBSTACLES = [
   [FOOD_SIGN.x, FOOD_SIGN.z, 0.5],
   [BOOST_SIGN.x, BOOST_SIGN.z, 0.5],
   [POTTY.x, POTTY.z, 0.9],
-  [JAR.x, JAR.z, 1.3],
+  [JAR.x, JAR.z, 1.3 * JAR_SCALE],
   ...TREES.map((t) => [t.x, t.z, 0.35]),
   ...COLUMNS.slice(0, 1).map((c) => [c.x, c.z, 0.7]),
   ...ROCKS.map(([x, z, r]) => [x, z, r]),

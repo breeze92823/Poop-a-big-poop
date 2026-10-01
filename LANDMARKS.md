@@ -110,7 +110,9 @@ and `:` is the Swirl Pad.
 | **Rim Rocks** | (16.9, -5), (17.9, -4.1), (15.8, -5.9) | `ROCKS` | Cliffs.jsx | Three grey boulders under the Toppled Column. |
 | **Cliff Bush** | (16.4, -11.4) | `BUSHES[1]` | Vegetation.jsx | Bush at the East Cliff's north-west foot. |
 | **East Bush** | (25, 1) | `BUSHES[2]` | Vegetation.jsx | Bush on the east edge behind the Locked Jar. |
-| **Locked Jar** | (19.2, 2.6) | `JAR` | [ChainedJar.jsx](src/components/ChainedJar.jsx) | Glass jar with a slowly spinning poop inside, wrapped in chains, with a yellow padlock facing the pad. |
+| **Locked Jar** | (19.2, 2.6), 2x scale (`JAR_SCALE`) | `JAR` | [ChainedJar.jsx](src/components/ChainedJar.jsx) | Glass jar with a slowly spinning poop inside, wrapped in chains, with a yellow padlock facing the pad. |
+| **Jar Label** | above the Locked Jar (y 6.6) | `JAR` | ChainedJar.jsx, `jarLabelTexture` | Floating "THEFT IMMUNITY" title with a "Prevents your poops from being stolen!" caption. |
+| **Jar Lightning** | around the Locked Jar | `JAR` | ChainedJar.jsx (`Electricity`) | Crackling cyan arcs, rising sparks, flickering light and an energy shell. |
 | **Glow Ring** | under the Locked Jar | `JAR` | ChainedJar.jsx | White disc with a pulsing blue segmented halo and a blue point light. |
 
 ## South
@@ -165,7 +167,7 @@ Defined in `INTERACTS` ([world.js](src/data/world.js)); logic in [interact.js](s
 | `boost` | Daily Size Boost Stall | 3.6 | Claim Size Boost | Opens the Daily Size Boost window |
 | `foodFx` | Save Food Effect Stall | 3.6 | Save Food Effects | Opens the Save Mutations window (SaveFoodFx.jsx): $200 keeps held foods for 24 h |
 | `reward` | Reward NPC | 2.6 | Claim Reward | Coming soon |
-| `jar` | Locked Jar | 2.8 | Open Jar | "Locked" |
+| `jar` | Locked Jar | 5.6 | Buy Theft Immunity · $1,000 | buys Theft Immunity (then "Theft Immunity Active") |
 
 ### Touch controls
 

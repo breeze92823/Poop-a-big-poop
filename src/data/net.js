@@ -31,3 +31,8 @@ export const PROGRESS_RESEND_DEBOUNCE_MS = 3_000
 // Wait this long for Bloxity auth to settle before the first connect, so a
 // signed-in player joins under their real userId instead of as a guest.
 export const USERNAME_WAIT_MS = 8_000
+
+// Stealing poop from a nearby remote player (systems/net.js requestSteal). The server has
+// its own copy of the cost and a looser range (backend constants.ts STEAL_*).
+export const STEAL_COST = 1000
+export const STEAL_RANGE = 1.8 // m: "really near" before the E prompt shows

@@ -130,6 +130,40 @@ export function spendMoney(cost) {
   return true
 }
 
+// Gives money back (a failed steal's cost).
+export function refundMoney(amount) {
+  if (!(amount > 0)) return
+  money += amount
+  for (const fn of listeners) fn(money)
+}
+
+// Another player robbed us: hands over every held poop as { type, value } and empties the inventory.
+export function takeAllPoops() {
+  const taken = stacks.map((s) => ({ type: s.type, value: s.value }))
+  stacks = []
+  selectedStack = null
+  inventory = 0
+  emitInventory()
+  return taken
+}
+
+// Adds stolen { type, value } poops to the inventory (not counted as drops). `foods` is shop.js's FOODS.
+export function addPoops(list, foods) {
+  const added = list.flatMap((s) => {
+    const food = foods.find((f) => f.id === s.type)
+    if (!food && s.type !== PLAIN.key) return []
+    if (!(typeof s.value === 'number' && s.value > 0)) return []
+    const kind = food ? { type: food.id, name: `${food.effect} Poop`, color: food.color } : { ...PLAIN, type: PLAIN.key }
+    return [{ ...kind, key: `p${nextId++}`, value: s.value }]
+  })
+  if (!added.length) return { count: 0, value: 0 }
+  stacks = [...stacks, ...added]
+  const value = added.reduce((n, s) => n + s.value, 0)
+  inventory += value
+  emitInventory()
+  return { count: added.length, value }
+}
+
 export function step(dt) {
   for (const p of poops) p.age += dt
   while (poops.length && poops[0].age > POOP_LIFE) poops.shift()
