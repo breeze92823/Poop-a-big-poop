@@ -85,12 +85,13 @@ export function getFoodFx() {
     const left = Math.max(0, data.expiresAt - now)
     const saved = left > 0 ? data.slots : []
     const held = getPantry().slots
+    const pending = held.filter((s) => saved.find((v) => v.id === s.id)?.count !== s.count)
     snapshot = {
       open,
       saved,
       secondsLeft: Math.ceil(left / 1000),
-      pending: held.filter((s) => saved.find((v) => v.id === s.id)?.count !== s.count),
-      canSave: held.length > 0,
+      pending,
+      canSave: pending.length > 0,
     }
   }
   return snapshot
@@ -118,6 +119,7 @@ export function closeFoodFx() {
 export function saveFoods() {
   const slots = getPantry().slots
   if (!slots.length) return showActionResult('No foods to save', false)
+  if (!getFoodFx().pending.length) return showActionResult('Nothing new to save', false)
   if (!spendMoney(SAVE_COST)) return showActionResult('Not enough money', false)
   data = { slots: slots.map((s) => ({ ...s })), expiresAt: Date.now() + SAVE_MS }
   persist()
