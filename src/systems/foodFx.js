@@ -95,3 +95,19 @@ export function saveFoods() {
   showActionResult('Food effects saved', true)
   emit()
 }
+
+// The saved foods systems/net.js saves for a signed-in player.
+export function getSavedFoods() {
+  return { slots: data.slots.map((s) => ({ ...s })), expiresAt: data.expiresAt }
+}
+
+// Restores a save made on another device (net.js `progress`). A save this browser already
+// holds was merged into the pantry at load, so it wins; only an expired/empty local one yields.
+export function hydrateSavedFoods(d) {
+  if (data.expiresAt > Date.now()) return
+  if (!d || !Array.isArray(d.slots) || !Number.isFinite(d.expiresAt) || d.expiresAt <= Date.now()) return
+  data = { slots: d.slots.map((s) => ({ id: s.id, count: s.count })), expiresAt: d.expiresAt }
+  persist()
+  restoreFoods(data.slots)
+  emit()
+}

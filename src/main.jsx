@@ -9,8 +9,11 @@ import { player, resetPlayer } from './systems/playerState.js'
 import { setView, syncYawToPlayer } from './systems/cameraOrbit.js'
 import { SPAWN, SPAWN_FACING } from './data/world.js'
 import { init as initBloxity } from './systems/bloxity.js'
+import { init as initNet, flushProgress } from './systems/net.js'
 
 initBloxity()
+initNet()
+window.addEventListener('pagehide', flushProgress)
 resetPlayer(SPAWN, SPAWN_FACING)
 syncYawToPlayer()
 installInput()

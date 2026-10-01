@@ -95,12 +95,14 @@ export function makeGait(built) {
 // Both arms straight up (a bit past vertical in the swing axis), holding an
 // item overhead. Applied last in updateGait so it wins over walk/idle/airborne.
 const HOLD_ARM = -3.0
-export function setHolding(gait, on) {
-  if (gait) gait.holding = on
+const HOLD_ARM_FORWARD = -1.57 // arms straight out in front, for held food
+// mode: false (none), true / 'up' (overhead poop) or 'forward' (food).
+export function setHolding(gait, mode) {
+  if (gait) gait.holding = mode
 }
 
 function applyHold(gait) {
-  gait.q.setFromAxisAngle(gait.axis, HOLD_ARM)
+  gait.q.setFromAxisAngle(gait.axis, gait.holding === 'forward' ? HOLD_ARM_FORWARD : HOLD_ARM)
   for (const a of gait.arms) a.bone.quaternion.copy(a.bind).premultiply(gait.q)
 }
 

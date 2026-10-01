@@ -3,6 +3,7 @@ import { step as stepPlayer } from '../systems/playerMovement.js'
 import { update as updateCamera } from '../systems/cameraOrbit.js'
 import { step as stepPoops } from '../systems/poop.js'
 import { step as stepInteract } from '../systems/interact.js'
+import { reportLocal } from '../systems/net.js'
 
 // The single simulation tick. Rendered before the view components so its
 // useFrame subscribes first and runs first each frame.
@@ -17,6 +18,7 @@ export default function GameLoop() {
     stepPlayer(dt)
     stepPoops(dt)
     stepInteract()
+    reportLocal(dt)
     updateCamera(camera, dt)
   })
 

@@ -15,6 +15,7 @@ import Poops from './components/Poops.jsx'
 import Sky from './components/Sky.jsx'
 import Lighting from './components/Lighting.jsx'
 import Player from './components/Player.jsx'
+import RemotePlayers from './components/RemotePlayers.jsx'
 import Hud from './components/Hud.jsx'
 import TouchControls from './components/TouchControls.jsx'
 import RotatePrompt from './components/RotatePrompt.jsx'
@@ -73,6 +74,7 @@ export default function App() {
           <LoadingGate onReady={onSceneReady} />
         </Suspense>
         <Player />
+        <RemotePlayers />
       </Canvas>
       <Hud />
       <TouchControls />

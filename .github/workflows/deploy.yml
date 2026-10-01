@@ -45,7 +45,12 @@ jobs:
       - name: Build
         # prod = `vite build`; dev channel = `vite build --mode development`.
         # VITE_DEV_MODE is deliberately left unset so deployed builds use the
-        # real Bloxity SDK/CDN.
+        # real Bloxity SDK/CDN. The dev build reads VITE_SERVER_URL_DEV, prod
+        # reads VITE_SERVER_URL_MAIN (src/data/net.js). Repo VARIABLES are
+        # preferred (a server address isn't secret); same-named secrets still work.
+        env:
+          VITE_SERVER_URL_DEV: ${{ vars.SERVER_URL_DEV || secrets.SERVER_URL_DEV }}
+          VITE_SERVER_URL_MAIN: ${{ vars.SERVER_URL_MAIN || secrets.SERVER_URL_MAIN }}
         run: |
           if [ "${{ steps.channel.outputs.channel }}" = "prod" ]; then
             npm run build

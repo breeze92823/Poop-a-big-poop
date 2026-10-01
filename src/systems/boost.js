@@ -128,3 +128,18 @@ export function skipTimer() {
   save()
   emit()
 }
+
+// The claim state systems/net.js saves for a signed-in player.
+export function getBoostData() {
+  return { ...data }
+}
+
+// Adopts a saved claim state (net.js `progress`) unless this browser's own is newer, judged
+// by the boost end time (a claim only ever moves it forward; "Skip Timer" doesn't touch it).
+export function hydrateBoost(d) {
+  if (!d || ![d.streak, d.nextClaimAt, d.streakEnd, d.boostEndsAt].every(Number.isFinite)) return
+  if (d.boostEndsAt < data.boostEndsAt) return
+  data = { streak: d.streak, nextClaimAt: d.nextClaimAt, streakEnd: d.streakEnd, boostEndsAt: d.boostEndsAt }
+  save()
+  emit()
+}

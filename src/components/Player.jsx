@@ -12,6 +12,8 @@ import { getPoopStacks } from '../systems/poop.js'
 import { poopScale } from '../systems/poop.js'
 import { heldPoopGeometry } from '../utils/heldPoopGeometry.js'
 import { RIG_HEIGHT } from '../data/bloxity.js'
+import { getPantry } from '../systems/pantry.js'
+import { heldFoodModel } from '../utils/heldFood.js'
 
 const _up = new Vector3(0, 1, 0)
 const _targetQuat = new Quaternion()
@@ -81,6 +83,8 @@ export default function Player() {
   const gaitRef = useRef(null)
   const heldRef = useRef()
   const heldMat = useRef()
+  const foodRef = useRef()
+  const shownFood = useRef(null)
   const handY = (7.2 / RIG_HEIGHT) * player.dims.height
 
   // Rebuilt per loaded avatar — the gait's cached bind-pose quaternions
@@ -109,8 +113,17 @@ export default function Player() {
     if (held && heldMat.current) heldMat.current.color.set(held.color)
     if (held && heldRef.current) heldRef.current.scale.setScalar(poopScale(held.value))
 
+    // Selected food: swap the model in the hand only when the selection changes.
+    const { selected: foodId } = getPantry()
+    const food = foodId && !held ? foodId : null
+    if (foodRef.current && food !== shownFood.current) {
+      shownFood.current = food
+      foodRef.current.clear()
+      if (food) foodRef.current.add(heldFoodModel(food))
+    }
+
     const gait = gaitRef.current
-    setHolding(gait, !!held)
+    setHolding(gait, held ? 'up' : food ? 'forward' : false)
     if (gait) {
       const speed01 = Math.hypot(player.velocity.x, player.velocity.z) / player.moveSpeed
       updateGait(gait, Math.min(delta, 0.1), speed01, player.grounded)
@@ -129,6 +142,7 @@ export default function Player() {
       >
         <meshStandardMaterial ref={heldMat} color="#ffffff" roughness={0.5} />
       </mesh>
+      <group ref={foodRef} position={[0, (4.0 / RIG_HEIGHT) * player.dims.height, (2.3 / RIG_HEIGHT) * player.dims.height]} />
     </group>
   )
 }

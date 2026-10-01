@@ -34,6 +34,9 @@ export const poopScale = (lb) => Math.min(2.5, Math.max(0.4, Math.cbrt(lb / 100)
 
 const PLAIN = { key: 'plain', name: 'Poop', color: PALETTE.poop }
 let nextId = 1
+// Lifetime counters (leaderboards via systems/net.js); they only ever grow.
+let totalPoops = 0
+let totalEarned = 0
 // One entry per poop, never merged: { key (unique), type (food id or 'plain'), name, color, value (lb) }
 let stacks = inventory > 0 ? [{ ...PLAIN, key: `p${nextId++}`, type: PLAIN.key, value: inventory }] : []
 let selectedStack = null
@@ -77,6 +80,7 @@ export function awardPoop(amount, food = null) {
   const value = (food && food.stat === 'VALUE' ? amount * food.mult : amount) * getBoostMult()
   stacks = [...stacks, { ...kind, key: `p${nextId++}`, value }]
   inventory += value
+  totalPoops += 1
   emitInventory()
 }
 
@@ -93,6 +97,7 @@ export function sellInventory(all = false) {
   selectedStack = null
   inventory = stacks.reduce((n, s) => n + s.value, 0)
   money += earned
+  totalEarned += earned
   emitInventory()
   for (const fn of listeners) fn(money)
   return earned
@@ -109,4 +114,29 @@ export function spendMoney(cost) {
 export function step(dt) {
   for (const p of poops) p.age += dt
   while (poops.length && poops[0].age > POOP_LIFE) poops.shift()
+}
+
+// What systems/net.js saves for a signed-in player: money, lifetime counters and one
+// { type, value } per held poop.
+export function getProgress() {
+  return { money, totalEarned, totalPoops, poops: stacks.map((s) => ({ type: s.type, value: s.value })) }
+}
+
+// Replaces money, counters and the inventory with a saved doc (net.js `progress`).
+// `foods` is shop.js's FOODS, passed in so a poop gets its name and colour back.
+export function hydrate(d, foods) {
+  const num = (v, fallback) => (typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : fallback)
+  money = num(d.money, money)
+  totalEarned = num(d.totalEarned, totalEarned)
+  totalPoops = num(d.totalPoops, totalPoops)
+  stacks = (Array.isArray(d.poops) ? d.poops : []).flatMap((s) => {
+    const food = foods.find((f) => f.id === s.type)
+    if (!food && s.type !== PLAIN.key) return []
+    const kind = food ? { type: food.id, name: `${food.effect} Poop`, color: food.color } : { ...PLAIN, type: PLAIN.key }
+    return [{ ...kind, key: `p${nextId++}`, value: s.value }]
+  })
+  selectedStack = null
+  inventory = stacks.reduce((n, s) => n + s.value, 0)
+  emitInventory()
+  for (const fn of listeners) fn(money)
 }

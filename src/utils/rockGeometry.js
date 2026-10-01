@@ -15,7 +15,9 @@ function jitter(geometry, seed, amount, { keepY = false, keepBottom = false } = 
     const x = pos.getX(i)
     const y = pos.getY(i)
     const z = pos.getZ(i)
-    const key = `${x.toFixed(3)},${y.toFixed(3)},${z.toFixed(3)}`
+    // Round to integers: toFixed gives "-0.000" vs "0.000" at the cylinder's
+    // UV seam (sin(2π) ≈ -2e-16), which split the seam into a visible gap.
+    const key = `${Math.round(x * 1000)},${Math.round(y * 1000)},${Math.round(z * 1000)}`
     let o = offsets.get(key)
     if (!o) {
       o = [(rand() - 0.5) * 2 * amount, (rand() - 0.5) * 2 * amount, (rand() - 0.5) * 2 * amount]
