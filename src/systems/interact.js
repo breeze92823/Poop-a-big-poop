@@ -14,6 +14,7 @@ import { isShopOpen, openShop } from './shop.js'
 import { isBoostOpen, openBoost } from './boost.js'
 import { isFoodFxOpen, openFoodFx } from './foodFx.js'
 import { nearestStealTarget, requestSteal } from './net.js'
+import { getChestState, openChest } from './chest.js'
 import { buyTheftImmunity, hasTheftImmunity } from './theftImmunity.js'
 import { STEAL_COST } from '../data/net.js'
 
@@ -23,6 +24,10 @@ export const interactState = { zone: null }
 
 // The jar's prompt flips once it's owned; a separate cached zone keeps identity stable.
 const JAR_OWNED = { id: 'jar', key: 'jar-owned', prompt: 'Theft Immunity Active' }
+// Likewise the chest once we've opened it, or it's been emptied.
+const CHEST_MINE = { id: 'chest', key: 'chest-mine', prompt: 'Chest Opened' }
+const CHEST_EMPTY = { id: 'chest', key: 'chest-empty', prompt: 'Chest Empty' }
+const CHEST_CLAIM = { id: 'chest', key: 'chest-claim', prompt: 'Claim Prize · Free' }
 
 function nearestZone() {
   const { x, z } = player.position
@@ -36,6 +41,12 @@ function nearestZone() {
     }
   }
   if (best && best.id === 'jar' && hasTheftImmunity()) return JAR_OWNED
+  if (best && best.id === 'chest') {
+    const c = getChestState()
+    if (c.mine) return CHEST_MINE
+    if (c.left <= 0) return CHEST_EMPTY
+    if (c.open) return CHEST_CLAIM
+  }
   return best
 }
 
@@ -81,6 +92,9 @@ const ACTIONS = {
   jar() {
     buyTheftImmunity()
   },
+  chest() {
+    openChest()
+  },
 }
 
 export function step() {
@@ -90,8 +104,8 @@ export function step() {
   const act = ACTIONS[zone.id]
   if (act) {
     act(zone)
-    // Panel-opening actions are silent otherwise; the jar plays its own fail buzz and a
+    // Panel-opening actions are silent otherwise; the jar and chest report their own result, the jar plays its own fail buzz and a
     // steal reports its own result.
-    if (zone.id !== 'jar' && zone.id !== 'steal' && zone.id !== 'stealBlocked') playPop()
+    if (zone.id !== 'jar' && zone.id !== 'chest' && zone.id !== 'steal' && zone.id !== 'stealBlocked') playPop()
   } else showActionResult('Coming soon', false)
 }

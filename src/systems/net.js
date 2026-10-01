@@ -23,6 +23,8 @@ import {
 } from './bloxity.js'
 import { DEV_MODE } from '../data/bloxity.js'
 import { player } from './playerState.js'
+import { startUpdateReload } from './updateNotice.js'
+import { applyChestState, chestOffline, onChestAnim, onChestClaim, onChestResult, setChestSender } from './chest.js'
 import {
   getProgress,
   hydrate as hydratePoop,
@@ -54,6 +56,7 @@ import {
   USERNAME_WAIT_MS,
   STEAL_COST,
   STEAL_RANGE,
+  CLIENT_VERSION,
 } from '../data/net.js'
 
 // --- Public state -----------------------------------------------------------
@@ -432,6 +435,7 @@ async function connect() {
         // Seeds the server's PlayerState.avatar so others render us correctly
         // from the very first frame.
         avatar: JSON.stringify(avatarPayload()),
+        version: CLIENT_VERSION,
       }),
       JOIN_TIMEOUT_MS,
       'join timed out',
@@ -500,6 +504,23 @@ function attachRoom(joined) {
     send('buyFood', { id, tutorial })
     return true
   })
+  room.onMessage('chest', applyChestState)
+  // Our build is older than the server's minimum: save, then refresh the page.
+  room.onMessage('reload', () => {
+    if (getStableUserId() && progressLoaded) sendProgressNow()
+    startUpdateReload()
+  })
+  room.onMessage('chestAnim', onChestAnim)
+  room.onMessage('chestClaim', (d) => {
+    const remote = remotePlayers.get(d?.id)
+    onChestClaim(d?.id === selfId ? () => player.position : remote ? () => remote : null)
+  })
+  room.onMessage('chestResult', onChestResult)
+  setChestSender(() => {
+    if (!room) return false
+    send('openChest', {})
+    return true
+  })
   room.onMessage('stealResult', onStealResult)
   room.onMessage('stealRequest', onStealRequest)
   room.onMessage('stealBlock', onStealBlock)
@@ -563,6 +584,7 @@ function handleLeave() {
   room = null
   if (stealing) onStealResult({ ok: false, reason: 'gone' })
   setServerBuy(null)
+  chestOffline()
   shopOffline()
   selfId = ''
   connecting = false

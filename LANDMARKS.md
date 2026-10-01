@@ -34,7 +34,7 @@ and `:` is the Swirl Pad.
         #WWWW b                :::::                      #
          #                                               #
   10      #     N                                       #
-           #      d                           Y        #
+           #      d               X           Y        #
             #                              K          #
              ##                            b        ##
                ##                         t       ##
@@ -54,6 +54,7 @@ and `:` is the Swirl Pad.
 | `E` `e` | East Cliff, East Step (footprints) | `k` | NE Blocks 1-4 |
 | `N` `d` | Reward NPC, its board (South) | `c` `C` | Marble Column, Toppled Column |
 | `r` | Rim Rocks | `J` | Locked Jar |
+| `X` | Treasure Chest | | |
 
 ---
 
@@ -120,6 +121,7 @@ and `:` is the Swirl Pad.
 |---|---|---|---|---|
 | **South Tree** | (0.2, 20.4) | `TREES[1]` | Vegetation.jsx | Bare tree on the south edge. |
 | **South Bush** | (3.2, 19) | `TREES[1].bush` | Vegetation.jsx | Bush beside the South Tree. |
+| **Treasure Chest** (hidden for now: `CHEST_ENABLED = false` in world.js) | (1.2, 11.5), 3x scale (`CHEST_SCALE`) | `CHEST` | [TreasureChest.jsx](src/components/TreasureChest.jsx) | Wooden plank chest (`plankTexture`) in gold trim, heaped with coins, chained over the lid to a gold padlock; faces the pad, halfway between the Save Food Effect Stall and the Daily Size Boost Stall. Loops every 5 s: rattles, heaves the lid up against the chain (gold light and god rays spill out), slams shut and bounces. Gold ground halo, rising sparkles and two warm point lights. Floating **Chest Label** above it (gold "TREASURE CHEST" over a glowing green "FREE! 5 LEFT" badge ("CLAIM! n LEFT" once open) that counts down, then a grey "OPENED" (you took yours) / "EMPTY" badge; `chestLabelTexture`), bobbing and pulsing. Hold E (`chest` zone) to open it: the chain snaps and the padlock drops, the lid flies wide, and it erupts in bright gold particles, flying coins, a flash and a shockwave ring for every player, then stays open (steady glow, a trickle of gold, the padlock on the ground). Every claim (the opener's and each redeemer's) sends a stream of gold coins from the chest arcing up and homing in on the claiming player, trailing bright sparkles and popping on arrival ([TreasureFlight.jsx](src/components/TreasureFlight.jsx)); the server's `chestClaim` makes every player see it, and the chest puffs gold on each redeem. |
 
 ## South-east: the Size Boost corner
 
@@ -166,6 +168,7 @@ Defined in `INTERACTS` ([world.js](src/data/world.js)); logic in [interact.js](s
 | `boost` | Daily Size Boost Stall | 3.6 | Claim Size Boost | Opens the Daily Size Boost window |
 | `foodFx` | Save Food Effect Stall | 3.6 | Save Food Effects | Opens the Save Mutations window (SaveFoodFx.jsx): $200 keeps held foods for 24 h |
 | `reward` | Reward NPC | 2.6 | Claim Reward | Coming soon |
+| `chest` | Treasure Chest | 5.2 | Open Chest · Free / Claim Prize · Free | The first player to hold E opens it for everyone (server `chestAnim`: every client plays the opening) and it stays open until the server restarts; every other player then redeems with E. Only 5 players ever get the prize (the opener counts), once each: $2,000 + a Glazed Donut ([chest.js](src/systems/chest.js)). The server decides and remembers per account (backend `openChest`, `PlayerDoc.chestOpened`); a guest's claim lasts the session; offline it opens once. |
 | `jar` | Locked Jar | 5.6 | Buy Theft Immunity · $1,000 | buys Theft Immunity (then "Theft Immunity Active") |
 
 ### Touch controls
