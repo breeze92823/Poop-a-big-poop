@@ -1,6 +1,7 @@
 import { useEffect, useSyncExternalStore } from 'react'
 import { SELL_RATE, getPoopStacks, sellInventory, subscribeInventory } from '../systems/poop.js'
 import { closeSell, getSellOpen, subscribeSell } from '../systems/sellPanel.js'
+import { GuideArrow, useSellGuide } from './Tutorial.jsx'
 import { showActionResult } from '../systems/actionResult.js'
 
 const formatLb = (v) => `${Number.isInteger(v) ? v : v.toFixed(1)} lb`
@@ -11,6 +12,7 @@ const formatMoney = (v) => `$${v.toLocaleString('en-US', { minimumFractionDigits
 export default function SellPoop() {
   const open = useSyncExternalStore(subscribeSell, getSellOpen)
   const { stacks, selected } = useSyncExternalStore(subscribeInventory, getPoopStacks)
+  const sellGuide = useSellGuide()
 
   useEffect(() => {
     if (!open) return
@@ -52,6 +54,7 @@ export default function SellPoop() {
                   <span className="shop-stock">{stack.name} · {formatLb(stack.value)}</span>
                   <span className="shop-price">{formatMoney(stack.value * SELL_RATE)}</span>
                 </span>
+                {sellGuide && <GuideArrow dir="left" />}
               </button>
             )}
             <button className="shop-item" onClick={() => sell(true)} disabled={!stacks.length}>
@@ -67,7 +70,7 @@ export default function SellPoop() {
               </span>
             </button>
             {!stack && stacks.length > 0 && (
-              <div className="shop-warning">Select a poop in your inventory bar to sell just that one</div>
+              <div className="shop-warning">Select your new poop in the inventory bar below to sell just that one</div>
             )}
           </div>
         </div>

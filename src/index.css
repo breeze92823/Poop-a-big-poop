@@ -23,7 +23,7 @@ canvas { display: block; touch-action: none; }
 /* Tutorial text floating on a dark, blurred storm-cloud blob. */
 .hud-banner {
   top: 21%; left: 50%; transform: translate(-50%, -50%); white-space: nowrap;
-  display: flex; align-items: center; gap: 10px;
+  display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 4px 10px;
   font: 800 clamp(20px, 2.6vw, 36px) 'Montserrat', 'Arial Black', sans-serif; color: #fff;
   letter-spacing: -0.3px;
   -webkit-text-stroke: 1.5px #1a1a1a; paint-order: stroke fill;
@@ -35,7 +35,14 @@ canvas { display: block; touch-action: none; }
   border-radius: 50%; filter: blur(22px);
   background: radial-gradient(closest-side, rgba(14, 22, 30, 0.88) 0%, rgba(20, 34, 44, 0.7) 45%, rgba(40, 70, 85, 0.25) 75%, transparent 100%);
 }
+.hud-banner.is-long { width: min(760px, 92vw); text-align: center; }
+.hud-banner.is-long > span { white-space: normal; font-size: clamp(16px, 2vw, 26px); }
 .hud-banner i { font-style: normal; -webkit-text-stroke: 0; text-shadow: none; }
+.hud-banner small {
+  font: 700 clamp(12px, 1.3vw, 17px) 'Montserrat', 'Arial', sans-serif; letter-spacing: 0;
+  -webkit-text-stroke: 0; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+.hud-banner-hint { flex-basis: 100%; text-align: center; white-space: normal; max-width: min(560px, 90vw); margin: 0 auto; }
 
 /* Cash counter: chunky slanted cartoon numerals with a black outline. */
 .hud-money {
@@ -160,6 +167,25 @@ canvas { display: block; touch-action: none; }
   position: absolute; left: 0; right: 0; bottom: 0; height: 100%; transform-origin: bottom;
   background: linear-gradient(0deg, #168a22, #22dd33);
 }
+/* Tutorial: red arrow pointing at the charge bar (components/Tutorial.jsx ChargeArrow). */
+.tutorial-arrow {
+  right: calc(env(safe-area-inset-right, 0px) + 66px); top: 50%; width: 64px; height: 40px; margin-top: -20px;
+  fill: #e5252a; stroke: #fff; stroke-width: 3; stroke-linejoin: round;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.6)); animation: arrow-nudge 0.6s ease-in-out infinite alternate;
+}
+@keyframes arrow-nudge { to { transform: translateX(10px); } }
+/* Tutorial sell step: bobbing red arrows over the newest poop card (down) and inside Sell Selected (left). */
+.guide-arrow {
+  position: absolute; width: 44px; height: 28px; pointer-events: none; z-index: 2;
+  fill: #e5252a; stroke: #fff; stroke-width: 3; stroke-linejoin: round; overflow: visible;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.6));
+}
+.guide-arrow-down { left: 50%; top: -38px; margin-left: -22px; animation: guide-bob-down 0.6s ease-in-out infinite alternate; }
+.guide-arrow-right { right: 100%; top: 50%; margin: -14px 8px 0 0; animation: guide-bob-right 0.6s ease-in-out infinite alternate; }
+.guide-arrow-left { right: 16px; top: 50%; margin-top: -14px; animation: guide-bob-left 0.6s ease-in-out infinite alternate; }
+@keyframes guide-bob-down { to { transform: translateY(8px); } }
+@keyframes guide-bob-right { to { transform: translateX(8px); } }
+@keyframes guide-bob-left { to { transform: translateX(-8px); } }
 .hud-meter-progress { overflow: hidden; }
 .hud-meter-progress-fill { height: 100%; background: linear-gradient(90deg, #22dd33, #168a22); transition: width 0.15s ease-out; }
 
@@ -253,7 +279,7 @@ canvas { display: block; touch-action: none; }
   scrollbar-width: thin; scrollbar-color: #e9d9c8 transparent;
 }
 .shop-item {
-  flex: none; display: flex; align-items: stretch; gap: 22px; width: 100%; padding: 14px 20px 14px 22px; text-align: left; cursor: pointer;
+  flex: none; position: relative; display: flex; align-items: stretch; gap: 22px; width: 100%; padding: 14px 20px 14px 22px; text-align: left; cursor: pointer;
   font: inherit; color: #fff; background: rgba(60, 24, 8, 0.82); border: 3px solid #2a1004; border-radius: 6px;
   box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.04);
 }
@@ -269,12 +295,14 @@ canvas { display: block; touch-action: none; }
 .shop-info > span, .shop-effect > span { -webkit-text-stroke: 3px #000; paint-order: stroke fill; }
 .shop-name { font-size: 32px; line-height: 1; text-shadow: 0 2px 0 #000; }
 .shop-stock { font-size: 24px; line-height: 1; color: #b4b4b4; }
+.shop-was { color: #ff3b30; text-decoration: line-through; text-decoration-thickness: 4px; margin-right: 14px; }
+.shop-discount { font-size: 24px; color: #ffe600; }
 .shop-price { font-size: 38px; line-height: 1; color: #00ff1a; text-shadow: 0 2px 0 #000; }
 .shop-effect { flex: none; display: flex; flex-direction: column; align-items: flex-end; text-align: right; font-size: 17px; line-height: 1.15; }
 .shop-effect > span { -webkit-text-stroke-width: 2px; }
 .shop-mut { margin-top: auto; color: #8fcdff; font-size: 20px; -webkit-text-stroke-width: 2.5px !important; }
 .shop-rarity {
-  margin-top: 4px; min-width: 182px; padding: 4px 14px; text-align: center; font-size: 28px; color: #fff;
+  position: relative; margin-top: 4px; min-width: 182px; padding: 4px 14px; text-align: center; font-size: 28px; color: #fff;
   background: #8c8c8c; border: 3px solid #5d5d5d; border-radius: 6px;
   box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.25), inset 0 -3px 0 rgba(0, 0, 0, 0.2);
   -webkit-text-stroke: 3px #000;
@@ -335,7 +363,7 @@ canvas { display: block; touch-action: none; }
 .boost-check { position: absolute; width: 46%; fill: none; stroke: #2fd24a; stroke-width: 4.5; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 2px 0 #000); }
 .boost-note { text-align: center; text-transform: uppercase; font-size: clamp(11px, 2vw, 18px); color: #ffe600; -webkit-text-stroke: 2px #3a2a00; paint-order: stroke fill; }
 .boost-claim {
-  align-self: center; min-width: 40%; padding: 8px 40px; cursor: pointer; font: inherit; font-size: clamp(22px, 4vw, 34px); text-transform: uppercase; color: #fff;
+  position: relative; align-self: center; min-width: 40%; padding: 8px 40px; cursor: pointer; font: inherit; font-size: clamp(22px, 4vw, 34px); text-transform: uppercase; color: #fff;
   background: linear-gradient(#3fd157, #1f9a35); border: 4px solid #0f5a1c; border-radius: 16px;
   -webkit-text-stroke: 4px #0a3d12; text-shadow: 0 3px 0 #0a3d12; box-shadow: inset 0 4px 0 rgba(255, 255, 255, 0.35), 0 4px 0 rgba(0, 0, 0, 0.3);
 }

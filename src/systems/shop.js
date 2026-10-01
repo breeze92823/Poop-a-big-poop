@@ -7,9 +7,12 @@
 // owns the stock and pushes it through net.js -> applyServerShop, and a purchase
 // is only paid once the room confirms it got a unit. Offline the same schedule
 // is computed from the clock and played locally.
-import { getMoney, spendMoney } from './poop.js'
+import { getLastSale, getMoney, spendMoney } from './poop.js'
+import { isBuyStep } from './tutorial.js'
+import { FIRST_FOOD } from '../data/tutorial.js'
 import { addFood } from './pantry.js'
 import { showActionResult } from './actionResult.js'
+import { DEV_MODE } from '../data/bloxity.js'
 
 export const RESTOCK_SECONDS = 240 // "New foods in 4m 0s"; keep == backend RESTOCK_MS
 const RESTOCK_MS = RESTOCK_SECONDS * 1000
@@ -80,6 +83,7 @@ function stockForCycle(cycle) {
 // --- State ------------------------------------------------------------------
 let online = false // true while the room's shelf is the source of truth
 let cycle = -1 // offline only
+let serverCycle = -1 // restock number last pushed by the room
 let stock = Object.fromEntries(FOODS.map((f) => [f.id, 0]))
 let restockAt = performance.now() // performance.now() at which the shelf restocks
 let pending = false // an online purchase awaiting the room's answer
@@ -101,10 +105,18 @@ function secondsLeft() {
 // Offline: roll the local shelf over to the clock's current restock.
 function syncLocal() {
   const c = Math.floor(Date.now() / RESTOCK_MS)
-  if (c === cycle) return
+  if (c === cycle) return false
+  const restocked = cycle >= 0 || DEV_MODE // dev: also announce the first shelf
   cycle = c
   stock = stockForCycle(c)
   restockAt = performance.now() + ((c + 1) * RESTOCK_MS - Date.now())
+  if (restocked) announceRestock()
+  return true
+}
+
+// Top-centre popup, whether or not the shop is open.
+function announceRestock() {
+  showActionResult('The Food Shop has been restocked!', true)
 }
 
 function tick() {
@@ -112,10 +124,19 @@ function tick() {
   emit()
 }
 
+// Offline restocks are noticed by a clock check; online ones arrive from the room.
+setInterval(() => {
+  if (!online && !open && syncLocal()) emit()
+}, 1000)
+
 // net.js: the room's shelf ({ stock, endsInMs }), pushed on join, restock and every purchase.
 export function applyServerShop(data) {
   if (!data || typeof data.stock !== 'object' || data.stock === null) return
   online = true
+  if (data.cycle !== serverCycle) {
+    if (serverCycle >= 0 || DEV_MODE) announceRestock()
+    serverCycle = data.cycle
+  }
   stock = Object.fromEntries(FOODS.map((f) => [f.id, Number(data.stock[f.id]) || 0]))
   restockAt = performance.now() + (Number(data.endsInMs) || 0)
   emit()
@@ -125,6 +146,7 @@ export function applyServerShop(data) {
 export function shopOffline() {
   online = false
   pending = false
+  serverCycle = -1
   cycle = -1
   syncLocal()
   emit()
@@ -136,9 +158,17 @@ export function applyBuyResult(msg) {
   const food = FOODS.find((f) => f.id === msg?.id)
   if (!food) return
   if (!msg.ok) return showActionResult('Out of stock', false)
-  if (!spendMoney(food.price)) return showActionResult('Not enough money', false)
+  if (!spendMoney(foodPrice(food))) return showActionResult('Not enough money', false)
   addFood(food.id)
   showActionResult(`Bought ${food.name}`, true)
+}
+
+// What a food costs right now. Only on the tutorial's buy step, the first food is
+// discounted to what the player earned on their last sale (never above its price).
+export function foodPrice(food) {
+  const sale = getLastSale()
+  if (food.name === FIRST_FOOD.name && isBuyStep() && sale > 0) return Math.min(food.price, Math.round(sale * 100) / 100)
+  return food.price
 }
 
 export function setServerBuy(fn) {
@@ -175,20 +205,29 @@ export function closeShop() {
   emit()
 }
 
+// Units of a food the player can buy right now. On the tutorial's buy step the first food
+// always has at least 1, even if the shared shelf is empty.
+export function stockOf(id) {
+  const food = FOODS.find((f) => f.id === id)
+  const n = stock[id] || 0
+  return n <= 0 && food?.name === FIRST_FOOD.name && isBuyStep() ? 1 : n
+}
+
 export function buyFood(id) {
   const food = FOODS.find((f) => f.id === id)
   if (!food) return
   if (!online) syncLocal()
-  if (stock[id] <= 0 || food.price == null) return showActionResult('Out of stock', false)
+  if (stockOf(id) <= 0 || food.price == null) return showActionResult('Out of stock', false)
+  const tutorialUnit = stock[id] <= 0 // a unit the tutorial grants on an empty shelf
   if (online) {
     if (pending) return
-    if (getMoney() < food.price) return showActionResult('Not enough money', false)
+    if (getMoney() < foodPrice(food)) return showActionResult('Not enough money', false)
     pending = true
-    if (sendBuy && sendBuy(id)) return
+    if (sendBuy && sendBuy(id, tutorialUnit)) return
     pending = false
   }
-  if (!spendMoney(food.price)) return showActionResult('Not enough money', false)
-  stock = { ...stock, [id]: stock[id] - 1 }
+  if (!spendMoney(foodPrice(food))) return showActionResult('Not enough money', false)
+  if (!tutorialUnit) stock = { ...stock, [id]: stock[id] - 1 }
   addFood(id)
   showActionResult(`Bought ${food.name}`, true)
   emit()

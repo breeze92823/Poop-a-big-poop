@@ -8,6 +8,7 @@ import { player } from './playerState.js'
 import { isInteractKeyDown } from './input.js'
 import { step as stepHold } from './interactHold.js'
 import { showActionResult } from './actionResult.js'
+import { playPop } from './sfx.js'
 import { getSellOpen, openSell } from './sellPanel.js'
 import { isShopOpen, openShop } from './shop.js'
 import { isBoostOpen, openBoost } from './boost.js'
@@ -54,6 +55,9 @@ export function step() {
   interactState.zone = zone
   if (!stepHold(zone ? zone.id : null, isInteractKeyDown())) return
   const act = ACTIONS[zone.id]
-  if (act) act()
-  else showActionResult('Coming soon', false)
+  if (act) {
+    act()
+    // Panel-opening actions are silent otherwise; the jar plays its own fail buzz.
+    if (zone.id !== 'jar') playPop()
+  } else showActionResult('Coming soon', false)
 }

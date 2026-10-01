@@ -143,7 +143,8 @@ All in [Hud.jsx](src/components/Hud.jsx) and styled in [index.css](src/index.css
 
 | Name | Where | Class | Notes |
 |---|---|---|---|
-| **Tutorial Banner** | top centre | `.hud-banner` | "Tutorial: Tap To Poop 💩" on a dark blurred cloud. |
+| **Tutorial Banner** | top centre | `.hud-banner` ([Tutorial.jsx](src/components/Tutorial.jsx)) | "Tutorial: <step> 💩" with a hint line, step counter and Skip button on a dark blurred cloud; steps in [tutorial.js](src/data/tutorial.js). Hidden once finished, or entirely with `VITE_NO_TUTORIAL=true`. |
+| **Tutorial Guide Arrows** | from the player to the step's stall | `target` in tutorial.js | [GuideArrows.jsx](src/components/GuideArrows.jsx) | Red 3D arrowheads crawling along the ground to the Sell / Buy Stall, plus a big arrow bobbing over it. |
 | **Timing Meter** | bottom-centre | `.hud-meter` | Black bar with green sweet-spot zone + red centre, sweeping white needle, grey progress bar below (hidden until a hold is released). |
 | **Vertical Bar** | right-centre | `.hud-vbar` | Grey well with green fill (JS ping-pong). Shown only while left button is held; fill value is captured on release, then hidden and the Timing Meter appears. |
 | **Money Counter** | bottom-left | `.hud-money` | `$0.00`; no longer earned from poops, will come from selling the inventory. |

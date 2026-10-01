@@ -7,8 +7,8 @@
 // Relays position/yaw/gait (`move`), the avatar (`setAvatar`) and live stats;
 // exposes the remote roster that components/RemotePlayers.jsx renders. For a
 // signed-in player it also saves (`saveProgress`) and restores (`progress`)
-// money, the poop inventory, the Daily Size Boost and the Save Food Effects
-// stall. The pantry is deliberately NOT saved: foods only outlive a reload when
+// money, the poop inventory, the Daily Size Boost, the Save Food Effects
+// stall and whether the first-run tutorial is done. The pantry is deliberately NOT saved: foods only outlive a reload when
 // the player pays at the Save Food stall (systems/foodFx.js), which is what
 // `savedFoods` carries.
 import {
@@ -27,6 +27,7 @@ import { getProgress, hydrate as hydratePoop, subscribeInventory, subscribeMoney
 import { playFart } from './sfx.js'
 import { getBoostData, hydrateBoost, subscribeBoost } from './boost.js'
 import { getSavedFoods, hydrateSavedFoods, subscribeFoodFx } from './foodFx.js'
+import { getTutorialStep, hydrateTutorial, isTutorialDone, subscribeTutorial } from './tutorial.js'
 import { FOODS, applyServerShop, applyBuyResult, setServerBuy, shopOffline } from './shop.js'
 import {
   SERVER_URL,
@@ -140,7 +141,7 @@ function sendStatsNow() {
 
 // Everything the server persists for this player.
 function progressPayload() {
-  return { ...getProgress(), boost: getBoostData(), savedFoods: getSavedFoods() }
+  return { ...getProgress(), boost: getBoostData(), savedFoods: getSavedFoods(), tutorialDone: isTutorialDone(), tutorialStep: getTutorialStep() }
 }
 
 // The ROOM decides whether this session may persist (its userIds map), so a
@@ -169,6 +170,7 @@ function applyProgress(d) {
     if (saved) hydratePoop(d, FOODS)
     hydrateBoost(d.boost)
     hydrateSavedFoods(d.savedFoods)
+    hydrateTutorial(d.tutorialDone, d.tutorialStep)
   } catch (err) {
     console.warn('[net] could not apply saved progress', err)
   }
@@ -396,14 +398,15 @@ function attachRoom(joined) {
   room.onMessage('noProgress', () => {
     progressLoaded = true
     hydratedFromServer = true
+    hydrateTutorial(undefined)
     onStateChange()
   })
   // The shared Buy Food shelf: stock + ms to the next restock, and our buy answers.
   room.onMessage('shop', applyServerShop)
   room.onMessage('buyResult', applyBuyResult)
-  setServerBuy((id) => {
+  setServerBuy((id, tutorial) => {
     if (!room) return false
-    send('buyFood', { id })
+    send('buyFood', { id, tutorial })
     return true
   })
   room.onMessage('leaderboard', (data) => {
@@ -491,6 +494,7 @@ export function init() {
     subscribeInventory(onStateChange),
     subscribeBoost(onStateChange),
     subscribeFoodFx(onStateChange),
+    subscribeTutorial(onStateChange),
     subscribePoopDrop((type) => send('poop', { type })),
     // subscribeAuth also fires on friends/balance loads; sendIdentityNow()'s own
     // diff check filters those out.

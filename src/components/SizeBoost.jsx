@@ -1,4 +1,5 @@
 import { useEffect, useSyncExternalStore } from 'react'
+import { GuideArrow, useBoostGuide } from './Tutorial.jsx'
 import { BOOST_MINUTES, DAY_MULTS, SKIP_COST, claimBoost, closeBoost, getBoost, skipTimer, subscribeBoost } from '../systems/boost.js'
 
 const formatTime = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
@@ -10,6 +11,8 @@ const formatMult = (m) => `${m}x`
 // CLAIM starts a timed size multiplier that grows with the daily streak; Escape/E/X closes.
 export default function SizeBoost() {
   const { open, streak, canClaim, claimedToday, active, mult, secondsLeft } = useSyncExternalStore(subscribeBoost, getBoost)
+
+  const boostGuide = useBoostGuide()
 
   useEffect(() => {
     if (!open) return
@@ -70,7 +73,7 @@ export default function SizeBoost() {
             </div>
 
             <div className="boost-note">Boost lasts {BOOST_MINUTES} minutes • Claim once per day</div>
-            <button className="boost-claim" onClick={claimBoost} disabled={!canClaim}>Claim</button>
+            <button className="boost-claim" onClick={claimBoost} disabled={!canClaim}>Claim{boostGuide && canClaim && <GuideArrow dir="left" />}</button>
           </div>
         </div>
       </div>

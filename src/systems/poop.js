@@ -95,6 +95,13 @@ export function awardPoop(amount, food = null) {
   emitInventory()
 }
 
+let lastSale = 0 // cash from the most recent sale
+
+// What the player earned on their last sale (0 before the first one).
+export function getLastSale() {
+  return lastSale
+}
+
 export const SELL_RATE = 0.01 // $ per unit of stored poop yield
 
 // Sells the selected poop stack at the Sell Stall (the whole inventory when `all` is set
@@ -109,6 +116,7 @@ export function sellInventory(all = false) {
   inventory = stacks.reduce((n, s) => n + s.value, 0)
   money += earned
   totalEarned += earned
+  lastSale = earned
   emitInventory()
   for (const fn of listeners) fn(money)
   return earned

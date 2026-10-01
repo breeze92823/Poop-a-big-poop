@@ -9,6 +9,8 @@ import SellPoop from './SellPoop.jsx'
 import SizeBoost from './SizeBoost.jsx'
 import SaveFoodFx from './SaveFoodFx.jsx'
 import FoodBar from './FoodBar.jsx'
+import Tutorial, { ChargeArrow } from './Tutorial.jsx'
+import { reportTutorialEvent } from '../systems/tutorial.js'
 import { FOODS } from '../systems/shop.js'
 import { consumeSelected } from '../systems/pantry.js'
 import { awardPoop, getSelectedPoopType, getMoney, subscribeMoney } from '../systems/poop.js'
@@ -96,7 +98,7 @@ function useMoney() {
   return useSyncExternalStore(subscribeMoney, getMoney)
 }
 
-// DOM overlay laid out like the reference: the tutorial banner floating on a dark cloud
+// DOM overlay laid out like the reference: the tutorial banner (Tutorial.jsx) floating on a dark cloud
 // at the top centre and the cash counter bottom-left. Everything is
 // pointer-events:none except the buttons, so taps reach the canvas.
 export default function Hud() {
@@ -128,6 +130,10 @@ export default function Hud() {
     }
     raf = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(raf)
+  }, [phase])
+
+  useEffect(() => {
+    if (phase === 'meter') reportTutorialEvent('hold')
   }, [phase])
 
   useEffect(() => {
@@ -182,9 +188,7 @@ export default function Hud() {
       <SaveFoodFx />
       <FoodBar />
 
-      <div className="hud-banner">
-        <span>Tutorial: Tap To Poop</span> <i aria-hidden>💩</i>
-      </div>
+      <Tutorial phase={phase} />
 
       {phase === 'meter' && (
       <div className="hud-meter" data-charge={charge.toFixed(2)}>
@@ -203,6 +207,7 @@ export default function Hud() {
       )}
 
       {phase === 'charging' && <ChargeBar valueRef={live} />}
+      {phase === 'charging' && <ChargeArrow />}
 
       <div className="hud-money" key={money}>
         ${money.toFixed(2)}

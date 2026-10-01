@@ -51,6 +51,8 @@ jobs:
         env:
           VITE_SERVER_URL_DEV: ${{ vars.SERVER_URL_DEV || secrets.SERVER_URL_DEV }}
           VITE_SERVER_URL_MAIN: ${{ vars.SERVER_URL_MAIN || secrets.SERVER_URL_MAIN }}
+          # Set the repo variable VITE_NO_TUTORIAL=true to ship without the first-run tutorial.
+          VITE_NO_TUTORIAL: ${{ vars.VITE_NO_TUTORIAL }}
           # Starting cash, dev channel only (prod always starts at 0).
           VITE_START_MONEY: ${{ steps.channel.outputs.channel != 'prod' && vars.VITE_START_MONEY || '' }}
         run: |
