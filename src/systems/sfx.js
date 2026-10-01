@@ -6,6 +6,10 @@ import { unlock, getMasterBus } from './audio.js'
 import {
   POP_SOUND_URL,
   POP_GAIN,
+  FART_SOUND_URL,
+  FART_GAIN,
+  FART_HEAR_NEAR_M,
+  FART_HEAR_RANGE_M,
   ACTION_FAIL_GAIN,
   ACTION_FAIL_SYNTH_NOTES_HZ,
   ACTION_FAIL_SYNTH_NOTE_GAP_S,
@@ -45,6 +49,7 @@ export function preload() {
   const ctx = unlock()
   if (!ctx) return
   loadBuffer(ctx, POP_SOUND_URL)
+  loadBuffer(ctx, FART_SOUND_URL)
   synthesizeActionFailBuffer(ctx)
   synthesizeButtonClickBuffer(ctx)
 }
@@ -66,6 +71,16 @@ export function playPop() {
   const ctx = unlock()
   if (!ctx) return
   loadBuffer(ctx, POP_SOUND_URL).then((buffer) => playBuffer(ctx, buffer, POP_GAIN))
+}
+
+// `distance` (m) is how far away the farter is: omitted for our own, full volume.
+export function playFart(distance = 0) {
+  const t = (FART_HEAR_RANGE_M - distance) / (FART_HEAR_RANGE_M - FART_HEAR_NEAR_M)
+  const falloff = Math.min(1, Math.max(0, t)) ** 2
+  if (falloff <= 0.001) return
+  const ctx = unlock()
+  if (!ctx) return
+  loadBuffer(ctx, FART_SOUND_URL).then((buffer) => playBuffer(ctx, buffer, FART_GAIN * falloff))
 }
 
 let actionFailBufferPromise = null

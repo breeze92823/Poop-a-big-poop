@@ -23,10 +23,11 @@ import {
 } from './bloxity.js'
 import { DEV_MODE } from '../data/bloxity.js'
 import { player } from './playerState.js'
-import { getProgress, hydrate as hydratePoop, subscribeInventory, subscribeMoney } from './poop.js'
+import { getProgress, hydrate as hydratePoop, subscribeInventory, subscribeMoney, subscribePoopDrop } from './poop.js'
+import { playFart } from './sfx.js'
 import { getBoostData, hydrateBoost, subscribeBoost } from './boost.js'
 import { getSavedFoods, hydrateSavedFoods, subscribeFoodFx } from './foodFx.js'
-import { FOODS } from './shop.js'
+import { FOODS, applyServerShop, applyBuyResult, setServerBuy, shopOffline } from './shop.js'
 import {
   SERVER_URL,
   ROOM_NAME,
@@ -397,6 +398,14 @@ function attachRoom(joined) {
     hydratedFromServer = true
     onStateChange()
   })
+  // The shared Buy Food shelf: stock + ms to the next restock, and our buy answers.
+  room.onMessage('shop', applyServerShop)
+  room.onMessage('buyResult', applyBuyResult)
+  setServerBuy((id) => {
+    if (!room) return false
+    send('buyFood', { id })
+    return true
+  })
   room.onMessage('leaderboard', (data) => {
     lastLeaderboard = data || {}
     for (const fn of leaderboardListeners) {
@@ -417,6 +426,13 @@ function attachRoom(joined) {
     if (sessionId === selfId) return
     remotePlayers.set(sessionId, p)
     notifyRoster('onAdd', sessionId, p)
+    // Their poopSeq bumps once per drop: play the fart, quieter the farther they are.
+    let lastSeq = p.poopSeq
+    $(p).listen('poopSeq', (seq) => {
+      if (seq === lastSeq) return
+      lastSeq = seq
+      playFart(Math.hypot(p.x - player.position.x, p.y - player.position.y, p.z - player.position.z))
+    })
   })
   $(room.state).players.onRemove((_p, sessionId) => {
     recount()
@@ -445,6 +461,8 @@ function clearRemotePlayers() {
 
 function handleLeave() {
   room = null
+  setServerBuy(null)
+  shopOffline()
   selfId = ''
   connecting = false
   netState.playerCount = 0
@@ -473,6 +491,7 @@ export function init() {
     subscribeInventory(onStateChange),
     subscribeBoost(onStateChange),
     subscribeFoodFx(onStateChange),
+    subscribePoopDrop((type) => send('poop', { type })),
     // subscribeAuth also fires on friends/balance loads; sendIdentityNow()'s own
     // diff check filters those out.
     subscribeAuth(() => sendIdentityNow()),
@@ -515,6 +534,8 @@ export function teardown() {
     }
   }
   room = null
+  setServerBuy(null)
+  shopOffline()
   connecting = false
   netState.playerCount = 0
   setStatus('idle')

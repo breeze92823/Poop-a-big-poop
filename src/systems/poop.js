@@ -1,5 +1,6 @@
 import { PALETTE } from '../materials/tile.js'
 import { getBoostMult } from './boost.js'
+import { playFart } from './sfx.js'
 
 // Meter-to-poop: a finished meter round drops a poop behind the player and stores its
 // yield in the inventory (selling it for money comes later). Plain module state, mutated
@@ -48,6 +49,14 @@ function emitInventory() {
 }
 
 // Total poop yield held (what the HUD counter shows).
+// Fired with the poop's food type on every drop (systems/net.js relays it to the room).
+const dropListeners = new Set()
+
+export function subscribePoopDrop(fn) {
+  dropListeners.add(fn)
+  return () => dropListeners.delete(fn)
+}
+
 export function getInventory() {
   return inventory
 }
@@ -81,6 +90,8 @@ export function awardPoop(amount, food = null) {
   stacks = [...stacks, { ...kind, key: `p${nextId++}`, value }]
   inventory += value
   totalPoops += 1
+  playFart()
+  for (const fn of dropListeners) fn(kind.type)
   emitInventory()
 }
 
