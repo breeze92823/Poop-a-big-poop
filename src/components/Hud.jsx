@@ -11,7 +11,7 @@ import SaveFoodFx from './SaveFoodFx.jsx'
 import FoodBar from './FoodBar.jsx'
 import { FOODS } from '../systems/shop.js'
 import { consumeSelected } from '../systems/pantry.js'
-import { awardPoop, getSelectedPoopType, getInventory, getMoney, subscribeInventory, subscribeMoney } from '../systems/poop.js'
+import { awardPoop, getSelectedPoopType, getMoney, subscribeMoney } from '../systems/poop.js'
 
 function FpsMeter() {
   const [fps, setFps] = useState(0)
@@ -102,7 +102,6 @@ function useMoney() {
 export default function Hud() {
   useSettings()
   const money = useMoney()
-  const stock = useSyncExternalStore(subscribeInventory, getInventory)
   // 'idle' (both hidden) -> 'charging' (left button held: vertical bar) -> 'meter' (released: timing meter)
   const [phase, setPhase] = useState('idle')
   const [charge, setCharge] = useState(0) // bar fill (0..1) captured on release
@@ -204,10 +203,6 @@ export default function Hud() {
       )}
 
       {phase === 'charging' && <ChargeBar valueRef={live} />}
-
-      <div className="hud-stock" key={`s${stock}`}>
-        <i aria-hidden>💩</i> {Number.isInteger(stock) ? stock : stock.toFixed(1)} lb
-      </div>
 
       <div className="hud-money" key={money}>
         ${money.toFixed(2)}

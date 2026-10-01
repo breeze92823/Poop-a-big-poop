@@ -46,15 +46,6 @@ canvas { display: block; touch-action: none; }
   text-shadow: 3px 3px 0 #111;
   animation: cash-bump 0.25s ease-out;
 }
-/* Inventory: poop stored but not yet sold, stacked above the cash counter. */
-.hud-stock {
-  left: 34px; bottom: calc(30px + clamp(32px, 3.4vw, 48px) + 10px);
-  font: 400 clamp(20px, 2.2vw, 30px)/1 'Luckiest Guy', 'Lilita One', 'Arial Black', sans-serif;
-  color: #fff; -webkit-text-stroke: 2px #111; paint-order: stroke fill; text-shadow: 2px 2px 0 #111;
-  animation: cash-bump 0.25s ease-out;
-}
-.hud-stock i { font-style: normal; -webkit-text-stroke: 0; text-shadow: none; }
-.touch-mode .hud-stock { left: calc(env(safe-area-inset-left, 0px) + 18px); bottom: calc(env(safe-area-inset-bottom, 0px) + 14px + clamp(32px, 3.4vw, 48px) + 8px); }
 @keyframes cash-bump { from { transform: skewX(-10deg) scale(1.12); } to { transform: skewX(-10deg) scale(1); } }
 
 .loading {

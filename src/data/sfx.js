@@ -8,8 +8,8 @@ export const POP_SOUND_URL = '/audio/power_gain.mp3'
 export const POP_GAIN = 0.135
 
 // Played when a poop drops (systems/poop.js awardPoop).
-export const FART_SOUND_URL = '/audio/fart.mp3'
-export const FART_GAIN = 0.16
+export const FART_SOUND_URL = '/audio/fart_2.mp3'
+export const FART_GAIN = 1.0
 // Other players' farts fade out linearly (squared, so it falls off quickly) from full
 // volume at FART_HEAR_NEAR_M to silence at FART_HEAR_RANGE_M (the island is 52 m across).
 export const FART_HEAR_NEAR_M = 2

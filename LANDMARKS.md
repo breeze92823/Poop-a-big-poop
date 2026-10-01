@@ -146,7 +146,6 @@ All in [Hud.jsx](src/components/Hud.jsx) and styled in [index.css](src/index.css
 | **Tutorial Banner** | top centre | `.hud-banner` | "Tutorial: Tap To Poop 💩" on a dark blurred cloud. |
 | **Timing Meter** | bottom-centre | `.hud-meter` | Black bar with green sweet-spot zone + red centre, sweeping white needle, grey progress bar below (hidden until a hold is released). |
 | **Vertical Bar** | right-centre | `.hud-vbar` | Grey well with green fill (JS ping-pong). Shown only while left button is held; fill value is captured on release, then hidden and the Timing Meter appears. |
-| **Poop Inventory** | bottom-left, above money | `.hud-stock` | `💩 N`: poop yield stored from finished meter rounds (charge % × 100), not yet sold. |
 | **Money Counter** | bottom-left | `.hud-money` | `$0.00`; no longer earned from poops, will come from selling the inventory. |
 | **FPS Meter** | top-right | `.hud-fps` | Only shows when the `show_fps` setting is on. |
 | **Interact Prompt** | lower-centre (70% down) | `.interact-prompt` | [InteractPrompt.jsx](src/components/InteractPrompt.jsx); dark card with an **E** keycap + label, shown inside any Interact Zone. Holding E for 2 s fills a white ring around the keycap (card shrinks to just the enlarged keycap while held); releasing early snaps it back. Ported from Laser-Escape. |
