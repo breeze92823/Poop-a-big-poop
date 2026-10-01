@@ -11,6 +11,11 @@ export const SERVER_URL_DEV = import.meta.env.VITE_SERVER_URL_DEV || 'ws://local
 export const SERVER_URL_MAIN = import.meta.env.VITE_SERVER_URL_MAIN || ''
 export const SERVER_URL = import.meta.env.MODE === 'production' ? SERVER_URL_MAIN : SERVER_URL_DEV
 
+// Build version sent when joining. The server (backend constants.ts MIN_CLIENT_VERSION) tells a
+// client below its minimum to reload the page. Raise both together to force everyone onto a new
+// deploy; leave them alone for deploys stale tabs can live with.
+export const CLIENT_VERSION = 1
+
 // Room handler name registered in the backend's app.config.ts.
 export const ROOM_NAME = 'lobby'
 

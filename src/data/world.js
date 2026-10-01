@@ -104,6 +104,9 @@ export const JAR_SCALE = 2 // jar model, label and effects are built at 1x and s
 
 // Gold-trimmed treasure chest south of the pad, halfway between the Save Food
 // Effect Stall and the Daily Size Boost Stall. Built at 1x and scaled.
+// Master switch: false hides the chest (not drawn, no E zone, no collision). Keep == the backend's
+// CHEST_ENABLED (constants.ts), which refuses `openChest` while it is off.
+export const CHEST_ENABLED = false
 export const CHEST = { x: 1.2, z: 11.5 }
 export const CHEST_SCALE = 3
 
@@ -115,7 +118,7 @@ export const INTERACTS = [
   { id: 'boost', x: STALLS[2].x, z: STALLS[2].z, r: 3.6, prompt: 'Claim Size Boost' },
   { id: 'foodFx', x: STALLS[3].x, z: STALLS[3].z, r: 3.6, prompt: 'Save Food Effects' },
   { id: 'reward', x: NPCS[0].x, z: NPCS[0].z, r: 2.6, prompt: 'Claim Reward' },
-  { id: 'chest', x: CHEST.x, z: CHEST.z, r: 5.2, prompt: 'Open Chest · Free' },
+  ...(CHEST_ENABLED ? [{ id: 'chest', x: CHEST.x, z: CHEST.z, r: 5.2, prompt: 'Open Chest · Free' }] : []),
   { id: 'jar', x: JAR.x, z: JAR.z, r: 2.8 * JAR_SCALE, prompt: 'Open Jar' },
 ]
 
@@ -135,7 +138,7 @@ export const OBSTACLES = [
   [BOOST_SIGN.x, BOOST_SIGN.z, 0.5],
   [POTTY.x, POTTY.z, 0.9],
   [JAR.x, JAR.z, 1.3 * JAR_SCALE],
-  [CHEST.x, CHEST.z, 0.95 * CHEST_SCALE],
+  ...(CHEST_ENABLED ? [[CHEST.x, CHEST.z, 0.95 * CHEST_SCALE]] : []),
   ...TREES.map((t) => [t.x, t.z, 0.35]),
   ...COLUMNS.slice(0, 1).map((c) => [c.x, c.z, 0.7]),
   ...ROCKS.map(([x, z, r]) => [x, z, r]),

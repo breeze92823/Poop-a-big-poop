@@ -1,6 +1,7 @@
 import { Suspense, useCallback, useEffect, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { PCFSoftShadowMap, SRGBColorSpace } from 'three'
+import { CHEST_ENABLED } from './data/world.js'
 import { notifyFirstFrame } from './systems/bloxity.js'
 import { settings } from './systems/settingsState.js'
 import { useSettings } from './systems/bloxityHooks.js'
@@ -13,6 +14,7 @@ import Landmarks from './components/Landmarks.jsx'
 import ChainedJar from './components/ChainedJar.jsx'
 import TreasureChest from './components/TreasureChest.jsx'
 import TreasureFlight from './components/TreasureFlight.jsx'
+import UpdateNotice from './components/UpdateNotice.jsx'
 import Poops from './components/Poops.jsx'
 import GuideArrows from './components/GuideArrows.jsx'
 import Sky from './components/Sky.jsx'
@@ -73,8 +75,8 @@ export default function App() {
           <Market />
           <Landmarks />
           <ChainedJar />
-          <TreasureChest />
-          <TreasureFlight />
+          {CHEST_ENABLED && <TreasureChest />}
+          {CHEST_ENABLED && <TreasureFlight />}
           <Poops />
           <LoadingGate onReady={onSceneReady} />
         </Suspense>
@@ -83,6 +85,7 @@ export default function App() {
         <RemotePlayers />
       </Canvas>
       <Hud />
+      <UpdateNotice />
       <TouchControls />
       <RotatePrompt />
       <LoadingScreen sceneReady={sceneReady} />
