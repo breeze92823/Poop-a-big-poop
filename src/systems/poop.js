@@ -116,7 +116,7 @@ export function getLastSale() {
   return lastSale
 }
 
-export const SELL_RATE = 0.01 // $ per unit of stored poop yield
+export const SELL_RATE = 1 // $ per unit of stored poop yield
 
 // Sells the selected poop stack at the Sell Stall (the whole inventory when `all` is set
 // or none is selected); returns the cash earned (0 when empty).
